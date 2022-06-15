@@ -15,12 +15,12 @@
 # limitations under the License.                                           #
 ############################################################################
 import asyncio
-import json
 import re
+import sys
 import time
 import uuid
-from json import JSONDecodeError
 from typing import Optional
+from pprint import pprint, pformat
 
 from pygls.lsp.methods import (COMPLETION, TEXT_DOCUMENT_DID_CHANGE,
                                TEXT_DOCUMENT_DID_CLOSE, TEXT_DOCUMENT_DID_OPEN, 
@@ -28,6 +28,7 @@ from pygls.lsp.methods import (COMPLETION, TEXT_DOCUMENT_DID_CHANGE,
 from pygls.lsp.types import (CompletionItem, CompletionList, CompletionOptions,
                              CompletionParams, ConfigurationItem,
                              ConfigurationParams, Diagnostic,
+                             DiagnosticSeverity,
                              DidChangeTextDocumentParams,
                              DidCloseTextDocumentParams,
                              DidOpenTextDocumentParams, MessageType, Position,
@@ -43,6 +44,13 @@ from pygls.lsp.types.window import (ShowDocumentCallbackType,
 from pygls.server import LanguageServer
 
 
+import MEDFORD.medford as medford
+import MEDFORD.medford_detailparser as medford_detailparser
+import MEDFORD.medford_detail as medford_detail
+import MEDFORD.medford_models as medford_models
+import MEDFORD.medford_BagIt as medford_BagIt
+import MEDFORD.medford_error_mngr as medford_error_mngr
+
 import logging
 
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
@@ -51,7 +59,7 @@ COUNT_DOWN_START_IN_SECONDS = 10
 COUNT_DOWN_SLEEP_IN_SECONDS = 1
 
 
-class JsonLanguageServer(LanguageServer):
+class MEDFORDLanguageServer(LanguageServer):
     CMD_COUNT_DOWN_BLOCKING = 'countDownBlocking'
     CMD_COUNT_DOWN_NON_BLOCKING = 'countDownNonBlocking'
     CMD_PROGRESS = 'progress'
@@ -68,46 +76,66 @@ class JsonLanguageServer(LanguageServer):
         super().__init__()
 
 
-json_server = JsonLanguageServer()
+medford_server = MEDFORDLanguageServer()
 
 
-def _validate(ls: JsonLanguageServer, params):
-    ls.show_message_log('Validating json...')
+def _validate(ls: MEDFORDLanguageServer, params):
+    ls.show_message_log('Validating MEDFORD!')
+    start = time.time_ns()
 
     text_doc = ls.workspace.get_document(params.text_document.uri)
+    source = text_doc.source.splitlines()
 
-    source = text_doc.source
-    diagnostics = _validate_json(source) if source else []
+    # ls.show_message_log(pformat(source))
 
+    diagnostics = _validate_medford(ls, source)
+    
     ls.publish_diagnostics(text_doc.uri, diagnostics)
 
+    end = time.time_ns()
+    ls.show_message_log((end - start) / 10**9)
 
-def _validate_json(source):
-    """Validates json file."""
+
+def _validate_medford(ls: MEDFORDLanguageServer, source: list) -> list:
+    """Validates MEDFORD file."""
     diagnostics = []
+    details = []
+    medford_detail.detail.macro_dictionary = {}
 
+    err_mngr = medford_error_mngr.error_mngr("ALL", "LINES")
+
+    # ls.show_message_log(pformat(source))
+
+    dr = None
+    for i, line in enumerate(source):
+        if line.strip() != "":
+            dr = medford_detail.detail.FromLine(line, i + 1, dr, err_mngr)
+            if isinstance(dr, medford_detail.detail_return):
+                if dr.is_novel:
+                    details.append(dr.detail)
+
+    if err_mngr.has_major_parsing:
+        ls.show_message_log(pformat(err_mngr._syntax_err_coll))
+
+
+    parser = medford_detailparser.detailparser(details, err_mngr)
+    final_dict = parser.export()
+    p = {}
     try:
-        json.loads(source)
-    except JSONDecodeError as err:
-        msg = err.msg
-        col = err.colno
-        line = err.lineno
-
-        d = Diagnostic(
-            range=Range(
-                start=Position(line=line - 1, character=col - 1),
-                end=Position(line=line - 1, character=col)
-            ),
-            message=msg,
-            source=type(json_server).__name__
-        )
-
-        diagnostics.append(d)
+        p = medford_models.Entity(**final_dict)
+    except medford.ValidationError as e:
+        helper = sys.stdout
+        sys.stdout = sys.stderr
+        parser.parse_pydantic_errors(e, final_dict)
+        sys.stdout = helper
+        ls.show_message_log(pformat(parser.err_mngr._error_collection))
+    else:
+        ls.show_message("No errors found.")
 
     return diagnostics
 
 
-@json_server.feature(COMPLETION, CompletionOptions(trigger_characters=[',']))
+@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=[',']))
 def completions(params: Optional[CompletionParams] = None) -> CompletionList:
     """Returns completion items."""
     return CompletionList(
@@ -122,16 +150,16 @@ def completions(params: Optional[CompletionParams] = None) -> CompletionList:
     )
 
 
-@json_server.command(JsonLanguageServer.CMD_SAY_HI)
-def say_hi(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_SAY_HI)
+def say_hi(ls: MEDFORDLanguageServer, *args):
     ls.show_message("hello world")
     def _sd_callback(res: ShowDocumentResult):
         logging.warning(res.__repr__())
     ls.show_document(ShowDocumentParams(uri=URI("file://Unknown.jpeg"), takeFocus=True), _sd_callback)
 
 
-@json_server.command(JsonLanguageServer.CMD_COUNT_DOWN_BLOCKING)
-def count_down_10_seconds_blocking(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_COUNT_DOWN_BLOCKING)
+def count_down_10_seconds_blocking(ls: MEDFORDLanguageServer, *args):
     """Starts counting down and showing message synchronously.
     It will `block` the main thread, which can be tested by trying to show
     completion items.
@@ -141,8 +169,8 @@ def count_down_10_seconds_blocking(ls: JsonLanguageServer, *args):
         time.sleep(COUNT_DOWN_SLEEP_IN_SECONDS)
 
 
-@json_server.command(JsonLanguageServer.CMD_COUNT_DOWN_NON_BLOCKING)
-async def count_down_10_seconds_non_blocking(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_COUNT_DOWN_NON_BLOCKING)
+async def count_down_10_seconds_non_blocking(ls: MEDFORDLanguageServer, *args):
     """Starts counting down and showing message asynchronously.
     It won't `block` the main thread, which can be tested by trying to show
     completion items.
@@ -152,33 +180,33 @@ async def count_down_10_seconds_non_blocking(ls: JsonLanguageServer, *args):
         await asyncio.sleep(COUNT_DOWN_SLEEP_IN_SECONDS)
 
 
-@json_server.feature(TEXT_DOCUMENT_DID_CHANGE)
-def did_change(ls: JsonLanguageServer, params: DidChangeTextDocumentParams):
+@medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
+def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
     _validate(ls, params)
 
 
-@json_server.feature(TEXT_DOCUMENT_DID_CLOSE)
-def did_close(server: JsonLanguageServer, params: DidCloseTextDocumentParams):
+@medford_server.feature(TEXT_DOCUMENT_DID_CLOSE)
+def did_close(server: MEDFORDLanguageServer, params: DidCloseTextDocumentParams):
     """Text document did close notification."""
     server.show_message('Text Document Did Close')
 
 
-@json_server.feature(TEXT_DOCUMENT_DID_OPEN)
-async def did_open(ls: JsonLanguageServer, params: DidOpenTextDocumentParams):
+@medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
+async def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     ls.show_message('Text Document Did Open')
     _validate(ls, params)
 
 
-@json_server.feature(
+@medford_server.feature(
     TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
     SemanticTokensLegend(
         token_types = ["operator"],
         token_modifiers = []
     )
 )
-def semantic_tokens(ls: JsonLanguageServer, params: SemanticTokensParams):
+def semantic_tokens(ls: MEDFORDLanguageServer, params: SemanticTokensParams):
     """See https://microsoft.github.io/language-server-protocol/specification#textDocument_semanticTokens
     for details on how semantic tokens are encoded."""
     
@@ -212,8 +240,8 @@ def semantic_tokens(ls: JsonLanguageServer, params: SemanticTokensParams):
 
 
 
-@json_server.command(JsonLanguageServer.CMD_PROGRESS)
-async def progress(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_PROGRESS)
+async def progress(ls: MEDFORDLanguageServer, *args):
     """Create and start the progress on the client."""
     token = 'token'
     # Create
@@ -231,8 +259,8 @@ async def progress(ls: JsonLanguageServer, *args):
     ls.progress.end(token, WorkDoneProgressEnd(message='Finished'))
 
 
-@json_server.command(JsonLanguageServer.CMD_REGISTER_COMPLETIONS)
-async def register_completions(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_REGISTER_COMPLETIONS)
+async def register_completions(ls: MEDFORDLanguageServer, *args):
     """Register completions method on the client."""
     params = RegistrationParams(registrations=[
                 Registration(
@@ -248,15 +276,15 @@ async def register_completions(ls: JsonLanguageServer, *args):
                         MessageType.Error)
 
 
-@json_server.command(JsonLanguageServer.CMD_SHOW_CONFIGURATION_ASYNC)
-async def show_configuration_async(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_SHOW_CONFIGURATION_ASYNC)
+async def show_configuration_async(ls: MEDFORDLanguageServer, *args):
     """Gets exampleConfiguration from the client settings using coroutines."""
     try:
         config = await ls.get_configuration_async(
             ConfigurationParams(items=[
                 ConfigurationItem(
                     scope_uri='',
-                    section=JsonLanguageServer.CONFIGURATION_SECTION)
+                    section=MEDFORDLanguageServer.CONFIGURATION_SECTION)
         ]))
 
         example_config = config[0].get('exampleConfiguration')
@@ -267,8 +295,8 @@ async def show_configuration_async(ls: JsonLanguageServer, *args):
         ls.show_message_log(f'Error ocurred: {e}')
 
 
-@json_server.command(JsonLanguageServer.CMD_SHOW_CONFIGURATION_CALLBACK)
-def show_configuration_callback(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_SHOW_CONFIGURATION_CALLBACK)
+def show_configuration_callback(ls: MEDFORDLanguageServer, *args):
     """Gets exampleConfiguration from the client settings using callback."""
     def _config_callback(config):
         try:
@@ -282,19 +310,19 @@ def show_configuration_callback(ls: JsonLanguageServer, *args):
     ls.get_configuration(ConfigurationParams(items=[
         ConfigurationItem(
             scope_uri='',
-            section=JsonLanguageServer.CONFIGURATION_SECTION)
+            section=MEDFORDLanguageServer.CONFIGURATION_SECTION)
     ]), _config_callback)
 
 
-@json_server.thread()
-@json_server.command(JsonLanguageServer.CMD_SHOW_CONFIGURATION_THREAD)
-def show_configuration_thread(ls: JsonLanguageServer, *args):
+@medford_server.thread()
+@medford_server.command(MEDFORDLanguageServer.CMD_SHOW_CONFIGURATION_THREAD)
+def show_configuration_thread(ls: MEDFORDLanguageServer, *args):
     """Gets exampleConfiguration from the client settings using thread pool."""
     try:
         config = ls.get_configuration(ConfigurationParams(items=[
             ConfigurationItem(
                 scope_uri='',
-                section=JsonLanguageServer.CONFIGURATION_SECTION)
+                section=MEDFORDLanguageServer.CONFIGURATION_SECTION)
         ])).result(2)
 
         example_config = config[0].get('exampleConfiguration')
@@ -305,8 +333,8 @@ def show_configuration_thread(ls: JsonLanguageServer, *args):
         ls.show_message_log(f'Error ocurred: {e}')
 
 
-@json_server.command(JsonLanguageServer.CMD_UNREGISTER_COMPLETIONS)
-async def unregister_completions(ls: JsonLanguageServer, *args):
+@medford_server.command(MEDFORDLanguageServer.CMD_UNREGISTER_COMPLETIONS)
+async def unregister_completions(ls: MEDFORDLanguageServer, *args):
     """Unregister completions method on the client."""
     params = UnregistrationParams(unregisterations=[
         Unregistration(id=str(uuid.uuid4()), method=COMPLETION)
