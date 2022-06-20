@@ -1,11 +1,24 @@
-import sys
+"""server.py
+
+By: Liam Strand
+On: June 2022
+
+A server implementing the Language Server Protocol for the MEDFORD metadata
+markup language. Validation is provided by Polina Shpilker's parser. LSP
+bindings are provided by the pygls library.
+
+"""
+from sys import stderr, stdout
 from timeit import default_timer
+import typing
 from pprint import pformat
 
-from pygls.lsp.methods import (TEXT_DOCUMENT_DID_CHANGE,
-                               TEXT_DOCUMENT_DID_OPEN)
-from pygls.lsp.types import (DidChangeTextDocumentParams,
-                             DidOpenTextDocumentParams)
+from pygls.lsp.methods import TEXT_DOCUMENT_DID_CHANGE, TEXT_DOCUMENT_DID_OPEN
+from pygls.lsp.types import (
+    Diagnostic,
+    DidChangeTextDocumentParams,
+    DidOpenTextDocumentParams,
+)
 from pygls.server import LanguageServer
 
 
@@ -13,13 +26,16 @@ import MEDFORD.medford as medford
 import MEDFORD.medford_detailparser as medford_detailparser
 import MEDFORD.medford_detail as medford_detail
 import MEDFORD.medford_models as medford_models
+
 # import MEDFORD.medford_BagIt as medford_BagIt
 import MEDFORD.medford_error_mngr as medford_error_mngr
 
-# The INFO logging level shows most messages passed between the server 
+# The INFO logging level shows most messages passed between the server
 # and the client
 import logging
+
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
+
 
 class MEDFORDLanguageServer(LanguageServer):
     def __init__(self):
@@ -29,7 +45,15 @@ class MEDFORDLanguageServer(LanguageServer):
 medford_server = MEDFORDLanguageServer()
 
 
-def _validate(ls: MEDFORDLanguageServer, params):
+def _validate(
+    ls: MEDFORDLanguageServer,
+    params: DidOpenTextDocumentParams | DidChangeTextDocumentParams,
+) -> None:
+    """Wrapper around validation function to request and display Diagnostics
+    Parameters: the Language Server, textDocument parameters
+       Returns: none
+       Effects: Displays diagnostics
+    """
 
     # We start the timer because I was currious how long this whole process took
     ls.show_message_log("Validating MEDFORD!")
@@ -41,7 +65,7 @@ def _validate(ls: MEDFORDLanguageServer, params):
 
     # Get diagnostics on the document
     diagnostics = _validate_medford(ls, source)
-    
+
     # Display diagnostics
     ls.publish_diagnostics(text_doc.uri, diagnostics)
 
@@ -50,8 +74,15 @@ def _validate(ls: MEDFORDLanguageServer, params):
     ls.show_message_log(end - start)
 
 
-def _validate_medford(ls: MEDFORDLanguageServer, source: list) -> list:
-    """Validates MEDFORD file."""
+def _validate_medford(ls: MEDFORDLanguageServer, source: list[str]) -> list[Diagnostic]:
+    """Validates a MEDFORD file and generates diagnostics
+    Parameters: The language server and a list of lines comprising the text
+                of the document
+       Returns: A list of Diagnostics
+       Effects: none
+
+    TODO: Parse the parser errors and convert to LSP diagnostics
+    """
     diagnostics = []
     details = []
 
@@ -85,21 +116,23 @@ def _validate_medford(ls: MEDFORDLanguageServer, source: list) -> list:
         try:
             p = medford_models.Entity(**final_dict)
         except medford.ValidationError as e:
-            helper = sys.stdout
-            sys.stdout = sys.stderr
+            helper = stdout
+            stdout = stderr
             parser.parse_pydantic_errors(e, final_dict)
-            sys.stdout = helper
+            stdout = helper
             ls.show_message_log(pformat(parser.err_mngr._error_collection))
-        else:  
+        else:
             # This shows a cute little popup
             ls.show_message("No errors found.")
 
     return diagnostics
 
+
 @medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
     _validate(ls, params)
+
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 async def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
