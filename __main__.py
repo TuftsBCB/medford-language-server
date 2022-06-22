@@ -7,7 +7,7 @@ logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
 
 
 def add_arguments(parser):
-    parser.description = "simple json server example"
+    parser.description = "MEDFORD Language Server"
 
     parser.add_argument(
         "--tcp", action="store_true",
@@ -28,6 +28,8 @@ def add_arguments(parser):
 
 
 def main():
+    with open("/Users/liamstrand/Desktop/out.txt", "w") as f:
+            print("hello world", file=f)
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
