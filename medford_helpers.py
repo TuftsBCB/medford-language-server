@@ -40,10 +40,11 @@ SYNTAX_ERR_REMAINING_TEMPLATE = "remaining_template"
 SYNTAX_ERR_NO_DESCRIPTION = "no_desc"
 SYNTAX_ERR_WRONG_MACRO_TOKEN = "wrong_macro_token"
 
+
 def validate_syntax(
     text_doc: Document,
 ) -> Tuple[List[medford_detail.detail], List[Diagnostic]]:
-    """ Evaluates the syntax of a medford file and generates a token list and
+    """Evaluates the syntax of a medford file and generates a token list and
     diagnostic list
     Parameters: A text document reference
     Returns: A tuple containing the tokens and the diagnostics
@@ -73,13 +74,13 @@ def validate_syntax(
     # Convert the medford parser format errors into LSP format Diagnostics
     for row in err_mngr._syntax_err_coll.values():
         for e in row:
-            diagnostics.append(_medford_syntax_error_to_diagnostic(e, source, text_doc.uri))
+            diagnostics.append(_syntax_error_to_diagnostic(e, source, text_doc.uri))
 
     # Return both the tokenized file, and the diagnostics.
     return (details, diagnostics)
 
 
-def _medford_syntax_error_to_diagnostic(
+def _syntax_error_to_diagnostic(
     error: medford_error_mngr.mfd_syntax_err, source: List[str], uri: str
 ) -> Diagnostic:
     """Converts a medford parser format syntax error to a LSP diagnostic
@@ -106,7 +107,7 @@ def _medford_syntax_error_to_diagnostic(
     # If we were using python 3.10, we would us a match, but we need to support
     # 3.8+, so we use a big if elif block.
 
-    # The other branches are very similar to this first one, so only this first 
+    # The other branches are very similar to this first one, so only this first
     # branch will be heavily documented. Other branches will be documented in their
     # novelty relative to this first branch
     if error_type == SYNTAX_ERR_UNEXPECTED_MACRO:
@@ -119,29 +120,23 @@ def _medford_syntax_error_to_diagnostic(
 
         # Start generating the Diagnostic
         return Diagnostic(
-
             # The first member, the range, describes the location of the syntax
             # error. It is comprised of two Positions, which are line:character
             # locations in a file.
-            range=Range( 
-
+            range=Range(
                 # The +2 offset is to exclude the `@ from the error squiggle
                 start=Position(line=line_number, character=match.start() + 2),
                 end=Position(line=line_number, character=match.end()),
             ),
-
             # The severity for all of the messages are Error because they
             # make the MEDFORD file invalid.
             severity=DiagnosticSeverity.Error,
-
             # The error code is the same as the error_type because it is a unique
             # identifier to this kind of error.
             code=error_type,
-
             # The source tells the user where the error is coming from. In this
             # case, the error is coming from the MEDFORDness of the file.
             source="MEDFORD",
-
             # The error message is passed through to be presented to the user.
             message=error_message,
         )
@@ -166,7 +161,6 @@ def _medford_syntax_error_to_diagnostic(
             code=error_type,
             source="MEDFORD",
             message=error_message,
-
             # The related information points to the prior "probably correct"
             # macro definition.
             related_information=[
@@ -174,8 +168,12 @@ def _medford_syntax_error_to_diagnostic(
                     location=Location(
                         uri=uri,
                         range=Range(
-                            start=Position(line=line_number, character=second_match.start()),
-                            end=Position(line=line_number, character=second_match.end()),
+                            start=Position(
+                                line=line_number, character=second_match.start()
+                            ),
+                            end=Position(
+                                line=line_number, character=second_match.end()
+                            ),
                         ),
                     ),
                     message=f"Earlier definition of macro",
@@ -213,7 +211,7 @@ def _medford_syntax_error_to_diagnostic(
     elif error_type == SYNTAX_ERR_WRONG_MACRO_TOKEN:
 
         # This error doesn't even need a scan because it always occours
-        # in the first two characters of the erronious line. 
+        # in the first two characters of the erronious line.
         # TODO: This isn't actually true...whoops! We need to scan for this.
         return Diagnostic(
             range=Range(
