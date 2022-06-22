@@ -36,7 +36,10 @@ class MEDFORDLanguageServer(LanguageServer):
 medford_server = MEDFORDLanguageServer()
 
 
-def _validate(ls: MEDFORDLanguageServer, params: Union[DidOpenTextDocumentParams, DidChangeTextDocumentParams]) -> None:
+def _validate(
+    ls: MEDFORDLanguageServer,
+    params: Union[DidOpenTextDocumentParams, DidChangeTextDocumentParams],
+) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, textDocument parameters
        Returns: none
@@ -46,7 +49,7 @@ def _validate(ls: MEDFORDLanguageServer, params: Union[DidOpenTextDocumentParams
     # Get the current document from the text editor
     doc = ls.workspace.get_document(params.text_document.uri)
 
-    # 
+    #
     (details, diagnostics) = medford_helpers.validate_syntax(doc)
 
     ls.publish_diagnostics(doc.uri, diagnostics)
