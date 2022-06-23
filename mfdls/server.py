@@ -69,6 +69,8 @@ def _generate_syntactic_diagnostics(
     # Get the current document from the text editor
     doc = ls.workspace.get_document(params.text_document.uri)
 
+    # Get diagnostics on the document
     (_, diagnostics) = validate_syntax(doc)
 
+    # Publish those diagnostics
     ls.publish_diagnostics(doc.uri, diagnostics)

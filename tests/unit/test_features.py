@@ -8,19 +8,18 @@ from pygls.lsp.types import (
 )
 from pygls.workspace import Document, Workspace
 
-from ...server import did_change, did_open
+from mfdls.server import did_change, did_open
 
 # We want this empty class instance because its helpful.
 # pylint: disable-next=R0903
 class FakeServer:
     """We don't need real server to unit test features."""
-
     publish_diagnostics = None
     show_message = None
     show_message_log = None
 
     def __init__(self):
-        self.workspace = Workspace("", None)
+        self.workspace = Workspace('', None)
 
 
 FAKE_DOCUMENT_URI = "file://fake_doc.txt"
