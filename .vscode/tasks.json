@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "black_this",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m black mfdls"
+        },
+        {
+            "label": "pylint_this",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m pylint --exit-zero mfdls",
+            "presentation": {
+                "showReuseMessage": false,
+                "focus": true
+            }
+        },
+        {
+            "label": "mypy_this",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m mypy mfdls",
+            "presentation": {
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "label": "Lint",
+            "dependsOn": [
+                "black_this",
+                "pylint_this",
+                "mypy_this"
+            ],
+            "dependsOrder": "sequence",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+
+}
