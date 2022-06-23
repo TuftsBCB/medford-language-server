@@ -8,6 +8,7 @@ markup language. Validation is provided by Polina Shpilker's parser. LSP
 bindings are provided by the pygls library.
 
 """
+import logging
 from typing import Union
 
 from pygls.lsp.methods import TEXT_DOCUMENT_DID_CHANGE, TEXT_DOCUMENT_DID_OPEN
@@ -17,16 +18,19 @@ from pygls.lsp.types import (
 )
 from pygls.server import LanguageServer
 
-from .medford_helpers import validate_syntax
+from mfdls.medford_helpers import validate_syntax
 
-# The INFO logging level shows most messages passed between the server
-# and the client
-import logging
-
+# Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
 
 
 class MEDFORDLanguageServer(LanguageServer):
+    """An object we can pass around that contains the connection to the text
+    editor.
+
+    Eventually, the commands that we register will end up in here.
+    """
+
     def __init__(self):
         super().__init__()
 

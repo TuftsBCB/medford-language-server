@@ -1,5 +1,5 @@
 [project]
-name = "medford-language-server"
+name = "mfdls"
 version = "0.0.1"
 description = "A language server, implementing the Language Server Protocol, for the MEDFORD metadata markup language."
 authors = [
@@ -23,9 +23,22 @@ mock = "^4.0"
 pylint = "^2.24"
 pytest = "^7.1"
 
+#### BLACK ####
+
 [tool.black]
 line-length = 88
 target_version = ['py38']
+
+#### MYPY ####
+
+[tool.mypy]
+python_version = 3.8
+
+[[tool.mypy.overrides]]
+module = "MEDFORD"
+ignore_missing_imports = true
+
+#### PYLINT ####
 
 [tool.pylint.'BASIC']
 good-names = ["f", "ls", "medford-language-server"]

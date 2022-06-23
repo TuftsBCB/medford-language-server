@@ -1,12 +1,30 @@
+#!/usr/bin/env python3
+"""__init__.py
+
+By: Liam Strand
+On: June 2022
+
+The driver for the MEDFORD Language Server.
+
+Usage:
+
+pythom -m mfdls [--ws | --tcp [--port <port number>] [--host <host ip>]]
+
+"""
 import argparse
 import logging
 
-from .server import medford_server
+from mfdls.server import medford_server
 
 logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
 
 
-def add_arguments(parser):
+def add_arguments(parser: argparse.ArgumentParser) -> None:
+    """Configures the argument parser
+    Parameters: The argument parser to configure
+       Returns: None
+       Effects: Adds arguments to the argument parser
+    """
     parser.description = "MEDFORD Language Server"
 
     parser.add_argument("--tcp", action="store_true", help="Use TCP server")
@@ -15,9 +33,8 @@ def add_arguments(parser):
     parser.add_argument("--port", type=int, default=2087, help="Bind to this port")
 
 
-def main():
-    with open("/Users/liamstrand/Desktop/out.txt", "w") as f:
-        print("hello world", file=f)
+def main() -> None:
+    """The Driver"""
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
