@@ -9,4 +9,4 @@ jobs:
       - uses: actions/checkout@v2
       - uses: psf/black@stable
         with:
-          options: "--check --verbose -t py38"
+          options: "--color --verbose -t py38"
