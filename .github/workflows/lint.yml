@@ -11,18 +11,3 @@ jobs:
       - uses: psf/black@stable
         with:
           options: "--check --verbose -t py38"
-  pylint:
-    name: pylint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Python
-        uses: actions/setup-python@master
-        with:
-          python-version: 3.8
-          architecture: x64
-      - name: Checkout PyTorch
-        uses: actions/checkout@master
-      - name: Install PyLint
-        run: pip install pylint
-      - name: Run Pylint
-        run: pylint medford-language-server -f colorized -s n -E
