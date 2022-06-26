@@ -18,8 +18,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-        pip install MEDFORD
-        pip install pygls
+        echo -e "from toml import load\nfor d in load('pyproject.toml')['dependencies'].keys():\n\tprint(d, end=' ')" | python > _____reqs.txt
+        pip install -r _____reqs.txt
+        rm _____reqs.txt
     - name: Analysing the code with pylint
       run: |
         pylint mfdls
