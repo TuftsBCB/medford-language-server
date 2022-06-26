@@ -18,7 +18,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint toml
-        echo -e "from toml import load\nfor d in load('pyproject.toml')['dependencies'].keys():\n\tprint(d, end=' ')" | python > _____reqs.txt
+        echo -e "from toml import load\nfor d in load('pyproject.toml')['dependencies'].keys():\n\tprint(d)" | python > _____reqs.txt
         pip install -r _____reqs.txt
         rm _____reqs.txt
     - name: Analysing the code with pylint
