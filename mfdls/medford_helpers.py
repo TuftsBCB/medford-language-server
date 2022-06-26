@@ -77,7 +77,8 @@ def validate_syntax(
     return (details, diagnostics)
 
 
-# There's no other way to handle this unfortunately
+# I couldn't figure out a way to handle this without lots of branches
+# any ideas are welcome.
 # pylint: disable-next=R0912
 def _syntax_error_to_diagnostic(
     error: medford_error_mngr.mfd_syntax_err, source: List[str], uri: str

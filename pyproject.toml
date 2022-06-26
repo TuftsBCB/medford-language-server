@@ -1,13 +1,27 @@
 [project]
 name = "mfdls"
-version = "0.0.1"
+version = "0.0.2"
 description = "A language server, implementing the Language Server Protocol, for the MEDFORD metadata markup language."
 authors = [
-    "Liam Strand <Liam.Strand@tufts.edu>",
-    "Andrew Powers <andrew_powers@uri.edu>"
+    { name="Liam Strand", email="Liam.Strand@tufts.edu" },
+    { name="Andrew Powers", email="andrew_powers@uri.edu" },
 ]
 readme = "README.md"
-python = "^3.8"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+    "Operating System :: OS Independent",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.urls]
 homepage = "https://github.com/liam-strand/medford-language-server/"
 repository = "https://github.com/liam-strand/medford-language-server/"
 
