@@ -1,0 +1,26 @@
+name: Mypy
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mypy toml
+        echo -e "from toml import load\nfor d in load('pyproject.toml')['dependencies'].keys():\n\tprint(d)" | python > _____reqs.txt
+        pip install -r _____reqs.txt
+        rm _____reqs.txt
+    - name: Analysing the code with Mypy
+      run: |
+        mypy mfdls
