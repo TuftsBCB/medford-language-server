@@ -24,7 +24,7 @@ from pygls.lsp.types import (
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
-from mfdls.medford_validation import validate_data, ValidationMode
+from mfdls.medford_validation import ValidationMode, validate_data
 
 # Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.WARNING)
@@ -62,6 +62,7 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
 
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
+    """Text document did save notification."""
     _generate_semantic_diagnostics(ls, params)
 
 
@@ -92,8 +93,13 @@ def _generate_semantic_diagnostics(
     ls: MEDFORDLanguageServer,
     params: DidSaveTextDocumentParams,
 ) -> None:
+    """Wrapper around validation function to request and display Diagnostics
+    Parameters: the Language Server, DidSaveTextDocument parameters
+       Returns: none
+       Effects: Displays diagnostics
+    """
     doc = ls.workspace.get_document(params.text_document.uri)
 
-    (details, diagnostics) = validate_data(doc, ls.validation_mode)
+    (_, diagnostics) = validate_data(doc, ls.validation_mode)
 
     ls.publish_diagnostics(doc.uri, diagnostics)
