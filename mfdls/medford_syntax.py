@@ -8,11 +8,9 @@ supports reporting on syntax errors.
 """
 
 import re
-from typing import List, Tuple, Optional
-
+from typing import List, Optional, Tuple
 
 from MEDFORD import medford_detail, medford_error_mngr
-
 from pygls.lsp.types import (
     Diagnostic,
     DiagnosticRelatedInformation,
@@ -22,7 +20,6 @@ from pygls.lsp.types import (
     Range,
 )
 from pygls.workspace import Document
-
 
 SYNTAX_ERR_UNEXPECTED_MACRO = "unexpected_macro"
 SYNTAX_ERR_DUPLICATED_MACRO = "duplicated_macro"
@@ -50,7 +47,7 @@ def validate_syntax(
     medford_detail.detail.macro_dictionary = {}
 
     # Set up the error manager
-    err_mngr = medford_error_mngr.error_mngr("ALL", "LINES")
+    err_mngr = medford_error_mngr.error_mngr("ALL", "LINE")
 
     # Tokenize the document
     detail_ret = None
@@ -72,6 +69,10 @@ def validate_syntax(
             diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
             if diag:
                 diagnostics.append(diag)
+
+    # If something went really wrong, don't try to report a valid tokenization
+    if err_mngr.has_major_parsing:
+        details = []
 
     # Return both the tokenized file, and the diagnostics.
     return (details, diagnostics)
@@ -248,25 +249,3 @@ def _syntax_error_to_diagnostic(
         source="MEDFORD",
         message=error_message,
     )
-
-    #### #### #### #### #### #### #### #### ####
-    #### #### #### SAVE FOR LATER #### #### ####
-    #### #### #### #### #### #### #### #### ####
-
-    # If the tokenization went okay, then validate the document and report errors
-    # to the client log (not the server log)
-    # else:
-    #     parser = medford_detailparser.detailparser(details, err_mngr)
-    #     final_dict = parser.export()
-    #     p = {}
-    #     try:
-    #         p = medford_models.Entity(**final_dict)
-    #     except medford.ValidationError as e:
-    #         helper = stdout
-    #         stdout = stderr
-    #         parser.parse_pydantic_errors(e, final_dict)
-    #         stdout = helper
-    #         ls.show_message_log(pformat(parser.err_mngr._error_collection))
-    #     else:
-    #         # This shows a cute little popup
-    #         ls.show_message("No errors found.")

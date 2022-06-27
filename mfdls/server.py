@@ -11,17 +11,23 @@ bindings are provided by the pygls library.
 import logging
 from typing import Union
 
-from pygls.lsp.methods import TEXT_DOCUMENT_DID_CHANGE, TEXT_DOCUMENT_DID_OPEN
+from pygls.lsp.methods import (
+    TEXT_DOCUMENT_DID_CHANGE,
+    TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DID_SAVE,
+)
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
+    DidSaveTextDocumentParams,
 )
 from pygls.server import LanguageServer
 
-from mfdls.medford_helpers import validate_syntax
+from mfdls.medford_syntax import validate_syntax
+from mfdls.medford_validation import validate_data, ValidationMode
 
 # Set up logging to pygls.log
-logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
+logging.basicConfig(filename="pygls.log", filemode="w", level=logging.WARNING)
 
 
 class MEDFORDLanguageServer(LanguageServer):
@@ -32,6 +38,7 @@ class MEDFORDLanguageServer(LanguageServer):
     """
 
     def __init__(self):
+        self.validation_mode = ValidationMode.BCODMO
         super().__init__()
 
 
@@ -48,9 +55,14 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
-async def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
+def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     _generate_syntactic_diagnostics(ls, params)
+
+
+@medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
+def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
+    _generate_semantic_diagnostics(ls, params)
 
 
 #### #### #### HELPERS #### #### ####
@@ -73,4 +85,15 @@ def _generate_syntactic_diagnostics(
     (_, diagnostics) = validate_syntax(doc)
 
     # Publish those diagnostics
+    ls.publish_diagnostics(doc.uri, diagnostics)
+
+
+def _generate_semantic_diagnostics(
+    ls: MEDFORDLanguageServer,
+    params: DidSaveTextDocumentParams,
+) -> None:
+    doc = ls.workspace.get_document(params.text_document.uri)
+
+    (details, diagnostics) = validate_data(doc, ls.validation_mode)
+
     ls.publish_diagnostics(doc.uri, diagnostics)
