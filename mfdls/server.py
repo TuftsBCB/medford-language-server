@@ -20,14 +20,16 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
+    MessageType,
 )
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
 from mfdls.medford_validation import ValidationMode, validate_data
+from mfdls.pip_helpers import pip_install, pip_uninstall, pip_upgrade
 
 # Set up logging to pygls.log
-logging.basicConfig(filename="pygls.log", filemode="w", level=logging.WARNING)
+logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
 
 
 class MEDFORDLanguageServer(LanguageServer):
@@ -36,6 +38,12 @@ class MEDFORDLanguageServer(LanguageServer):
 
     Eventually, the commands that we register will end up in here.
     """
+
+    CMD_INSTALL_MFDLS = "installMFDLS"
+    CMD_UPDATE_MFDLS = "updateMFDLS"
+    CMD_UNINSTALL_MFDLS = "uninstallMFDLS"
+
+    CONFIGURATION_SECTION = "medfordServer"
 
     def __init__(self):
         self.validation_mode = ValidationMode.BCODMO
@@ -64,6 +72,36 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
     _generate_semantic_diagnostics(ls, params)
+
+
+#### #### #### CUSTOM COMMANDS #### #### ####
+
+
+@medford_server.command(MEDFORDLanguageServer.CMD_INSTALL_MFDLS)
+async def install_mfdls(ls: MEDFORDLanguageServer, *_args):
+    """Command to install mfdls"""
+    if pip_install():
+        ls.show_message("Successfully installed mfdls", MessageType.Info)
+    else:
+        ls.show_message("Unable to install mfdls", MessageType.Warning)
+
+
+@medford_server.command(MEDFORDLanguageServer.CMD_UPDATE_MFDLS)
+async def update_mfdls(ls: MEDFORDLanguageServer, *_args):
+    """Command to update mfdls"""
+    if pip_upgrade():
+        ls.show_message("Successfully upgraded mfdls", MessageType.Info)
+    else:
+        ls.show_message("Unable to upgrade mfdls", MessageType.Warning)
+
+
+@medford_server.command(MEDFORDLanguageServer.CMD_UNINSTALL_MFDLS)
+async def uninstall_mfdls(ls: MEDFORDLanguageServer, *_args):
+    """Command to uninstall mfdls"""
+    if pip_uninstall():
+        ls.show_message("Successfully uninstalled mfdls", MessageType.Info)
+    else:
+        ls.show_message("Unable to uninstall mfdls", MessageType.Warning)
 
 
 #### #### #### HELPERS #### #### ####

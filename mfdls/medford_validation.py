@@ -1,3 +1,13 @@
+"""medford_validation.py
+
+By: Liam Strand
+On: June 2022
+
+Provides a LSP-compatable interface into the semantic validation aspects of the
+MEDFORD parser. Currently does not generate Diagnostic objects, only prints
+to the server's output.
+TODO: Parse medford errors into Diagnostics.
+"""
 import logging
 import sys
 from typing import List, Tuple
@@ -18,7 +28,13 @@ from mfdls.medford_syntax import validate_syntax
 def validate_data(
     text_doc: Document, mode: ValidationMode
 ) -> Tuple[List[detail], List[Diagnostic]]:
-
+    """Performs a semantic (and syntactic) validation on a text document
+    Parameters: A text document to verify, and the mode to validate in
+       Returns: A tuple containing the tokenized syntax, and a list of any
+                Diagnostics that should be sent to the client
+       Effects: Can optionally send Diagnostics to the client, or show a
+                "success" notification.
+    """
     (details, diagnostics) = validate_syntax(text_doc)
 
     if not details:
@@ -27,6 +43,9 @@ def validate_data(
     err_mngr = error_mngr("ALL", "LINE")
     parser = detailparser(details, err_mngr)
     final_dict = parser.export()
+
+    # Pydantic is going to spew out an error here, it's the parser's job
+    # to parser it
     try:
         if mode == ValidationMode.BCODMO:
             _ = BCODMO(**final_dict)
@@ -35,6 +54,10 @@ def validate_data(
         else:
             _ = Entity(**final_dict)
 
+    # We have to do the stdout/stderr song and dance because parse_pydantic_errors
+    # prints to stdout and we need to keep that channel clear of non-LSP
+    # communication. parse_pydantic_errors loads the error manager's
+    # _error_collection with the errors it finds.
     except ValidationError as err:
         _helper = sys.stdout
         sys.stdout = sys.stderr
