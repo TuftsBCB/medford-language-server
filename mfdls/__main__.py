@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""__init__.py
+"""__main__.py
 
 By: Liam Strand
 On: June 2022
