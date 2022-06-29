@@ -35,18 +35,21 @@ logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
 class MEDFORDLanguageServer(LanguageServer):
     """An object we can pass around that contains the connection to the text
     editor.
-
-    Eventually, the commands that we register will end up in here.
     """
+
+    #### COMMANDS ####
 
     CMD_INSTALL_MFDLS = "installMFDLS"
     CMD_UPDATE_MFDLS = "updateMFDLS"
     CMD_UNINSTALL_MFDLS = "uninstallMFDLS"
 
+    #### LS CONSTANTS ####
+
     CONFIGURATION_SECTION = "medfordServer"
 
     def __init__(self):
         self.validation_mode = ValidationMode.BCODMO
+        self.macros = {}
         super().__init__()
 
 
@@ -121,10 +124,13 @@ def _generate_syntactic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     # Get diagnostics on the document
-    (_, diagnostics) = validate_syntax(doc)
+    (details, diagnostics) = validate_syntax(doc)
 
     # Publish those diagnostics
     ls.publish_diagnostics(doc.uri, diagnostics)
+
+    # Store the defined macros in the languge server
+    ls.macros = details[-1].macro_dictionary
 
 
 def _generate_semantic_diagnostics(
