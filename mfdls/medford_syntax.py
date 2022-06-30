@@ -66,6 +66,7 @@ def validate_syntax(
     #     diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
     #     if diag:
     #         diagnostics.append(diag)
+    # pylint: disable-next=W0212
     for row in err_mngr._syntax_err_coll.values():
         for err in row:
             diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
