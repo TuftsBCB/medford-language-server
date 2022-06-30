@@ -11,10 +11,9 @@ bindings are provided by the pygls library.
 import logging
 from typing import Union
 
-from pygls.lsp.methods import (
+from pygls.lsp.methods import (  # TEXT_DOCUMENT_DID_SAVE,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
-    TEXT_DOCUMENT_DID_SAVE,
 )
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
@@ -69,6 +68,7 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     _generate_syntactic_diagnostics(ls, params)
+
 
 # Does not work yet, commenting out for a merge
 # @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
