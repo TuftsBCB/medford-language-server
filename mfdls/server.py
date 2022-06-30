@@ -126,11 +126,13 @@ def _generate_syntactic_diagnostics(
     # Get diagnostics on the document
     (details, diagnostics) = validate_syntax(doc)
 
-    # Publish those diagnostics
-    ls.publish_diagnostics(doc.uri, diagnostics)
+    # Publish the diagnostics
+    if diagnostics:
+        ls.publish_diagnostics(doc.uri, diagnostics)
 
     # Store the defined macros in the languge server
-    ls.macros = details[-1].macro_dictionary
+    if details:
+        ls.macros = details[0].macro_dictionary
 
 
 def _generate_semantic_diagnostics(

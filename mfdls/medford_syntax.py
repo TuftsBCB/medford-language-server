@@ -66,6 +66,11 @@ def validate_syntax(
         diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
         if diag:
             diagnostics.append(diag)
+    # for row in err_mngr.return_syntax_errors.values():
+    #     for err in row:
+    #         diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
+    #         if diag:
+    #             diagnostics.append(diag)
 
     # If something went really wrong, don't try to report a valid tokenization
     if err_mngr.has_major_parsing:
