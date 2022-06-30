@@ -47,7 +47,7 @@ class MEDFORDLanguageServer(LanguageServer):
     CONFIGURATION_SECTION = "medfordServer"
 
     def __init__(self):
-        self.validation_mode = ValidationMode.BCODMO
+        self.validation_mode = ValidationMode.OTHER
         self.macros = {}
         super().__init__()
 
