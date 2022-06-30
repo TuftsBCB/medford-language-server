@@ -62,15 +62,15 @@ def validate_syntax(
                     details.append(detail_ret.detail)
 
     # Convert the medford parser format errors into LSP format Diagnostics
-    for err in err_mngr.get_syntax_errors_list():
-        diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
-        if diag:
-            diagnostics.append(diag)
-    # for row in err_mngr.return_syntax_errors.values():
-    #     for err in row:
-    #         diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
-    #         if diag:
-    #             diagnostics.append(diag)
+    # for err in err_mngr.get_syntax_errors_list():
+    #     diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
+    #     if diag:
+    #         diagnostics.append(diag)
+    for row in err_mngr._syntax_err_coll.values():
+        for err in row:
+            diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
+            if diag:
+                diagnostics.append(diag)
 
     # If something went really wrong, don't try to report a valid tokenization
     if err_mngr.has_major_parsing:
