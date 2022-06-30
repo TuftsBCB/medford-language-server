@@ -2,6 +2,11 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "isort_this",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m isort mfdls"
+        },
+        {
             "label": "black_this",
             "type": "shell",
             "command": "${command:python.interpreterPath} -m black mfdls"
@@ -26,6 +31,7 @@
         {
             "label": "Lint",
             "dependsOn": [
+                "isort_this",
                 "black_this",
                 "pylint_this",
                 "mypy_this"

@@ -36,6 +36,7 @@ black = "^22.1"
 mock = "^4.0"
 pylint = "^2.24"
 pytest = "^7.1"
+mypy = "0.*"
 
 #### BLACK ####
 
@@ -49,7 +50,7 @@ target_version = ['py38']
 python_version = 3.8
 
 [[tool.mypy.overrides]]
-module = "MEDFORD"
+module = "MEDFORD.*"
 ignore_missing_imports = true
 
 #### PYLINT ####
