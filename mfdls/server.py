@@ -32,6 +32,7 @@ class MEDFORDLanguageServer(LanguageServer):
     """
 
     def __init__(self):
+        self.macros = {}
         super().__init__()
 
 
@@ -70,7 +71,11 @@ def _generate_syntactic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     # Get diagnostics on the document
-    (_, diagnostics) = validate_syntax(doc)
+    (details, diagnostics) = validate_syntax(doc)
 
     # Publish those diagnostics
-    ls.publish_diagnostics(doc.uri, diagnostics)
+    if diagnostics:
+        ls.publish_diagnostics(doc.uri, diagnostics)
+
+    if details:
+        ls.macros = details[0].macro_dictionary
