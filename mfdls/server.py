@@ -127,10 +127,9 @@ def _generate_syntactic_diagnostics(
     (details, diagnostics) = validate_syntax(doc)
 
     # Publish the diagnostics
-    if diagnostics:
-        ls.publish_diagnostics(doc.uri, diagnostics)
+    ls.publish_diagnostics(doc.uri, diagnostics)
 
-    # Store the defined macros in the languge server
+    # Store the defined macros in the languge server, if we successfully parse the file
     if details:
         ls.macros = details[0].macro_dictionary
 

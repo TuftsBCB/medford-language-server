@@ -20,7 +20,7 @@ from MEDFORD.medford_error_mngr import (
     mfd_unexpected_macro,
     mfd_wrong_macro_token,
 )
-from pygls.lsp.types import (
+from pygls.lsp.types.basic_structures import (
     Diagnostic,
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
@@ -67,7 +67,7 @@ def validate_syntax(
     #     if diag:
     #         diagnostics.append(diag)
     # pylint: disable-next=W0212
-    for row in err_mngr._syntax_err_coll.values():
+    for row in err_mngr.return_syntax_errors().values():
         for err in row:
             diag = _syntax_error_to_diagnostic(err, source, text_doc.uri)
             if diag:
