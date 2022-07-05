@@ -9,23 +9,29 @@ bindings are provided by the pygls library.
 
 """
 import logging
-from typing import Union
+from typing import Union, Optional
 
 from pygls.lsp.methods import (  # TEXT_DOCUMENT_DID_SAVE,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    COMPLETION,
 )
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
     MessageType,
+    CompletionItem,
+    CompletionList,
+    CompletionParams,
+    CompletionOptions
 )
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
 from mfdls.medford_validation import ValidationMode, validate_data
 from mfdls.pip_helpers import pip_install, pip_uninstall, pip_upgrade
+from mfdls.medford_tokens import get_available_tokens, _get_minor_tokens, _extract_minors_from_def
 
 # Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
@@ -65,46 +71,16 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
-def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
+async def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     _generate_syntactic_diagnostics(ls, params)
 
-
-# Does not work yet, commenting out for a merge
-# @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
-# def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
-#     """Text document did save notification."""
-#     _generate_semantic_diagnostics(ls, params)
-
-
-#### #### #### CUSTOM COMMANDS #### #### ####
-
-
-@medford_server.command(MEDFORDLanguageServer.CMD_INSTALL_MFDLS)
-async def install_mfdls(ls: MEDFORDLanguageServer, *_args):
-    """Command to install mfdls"""
-    if pip_install():
-        ls.show_message("Successfully installed mfdls", MessageType.Info)
-    else:
-        ls.show_message("Unable to install mfdls", MessageType.Warning)
-
-
-@medford_server.command(MEDFORDLanguageServer.CMD_UPDATE_MFDLS)
-async def update_mfdls(ls: MEDFORDLanguageServer, *_args):
-    """Command to update mfdls"""
-    if pip_upgrade():
-        ls.show_message("Successfully upgraded mfdls", MessageType.Info)
-    else:
-        ls.show_message("Unable to upgrade mfdls", MessageType.Warning)
-
-
-@medford_server.command(MEDFORDLanguageServer.CMD_UNINSTALL_MFDLS)
-async def uninstall_mfdls(ls: MEDFORDLanguageServer, *_args):
-    """Command to uninstall mfdls"""
-    if pip_uninstall():
-        ls.show_message("Successfully uninstalled mfdls", MessageType.Info)
-    else:
-        ls.show_message("Unable to uninstall mfdls", MessageType.Warning)
+#For now doesn't return user-defined macros or minor tags.
+@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=['@']))
+def completions(params: Optional[CompletionParams] = None) -> CompletionList:
+    """Returns completion items."""
+    tokens = get_available_tokens()
+    return tokens.keys()
 
 
 #### #### #### HELPERS #### #### ####
@@ -124,27 +100,7 @@ def _generate_syntactic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     # Get diagnostics on the document
-    (details, diagnostics) = validate_syntax(doc)
+    (_, diagnostics) = validate_syntax(doc)
 
-    # Publish the diagnostics
-    ls.publish_diagnostics(doc.uri, diagnostics)
-
-    # Store the defined macros in the languge server, if we successfully parse the file
-    if details:
-        ls.macros = details[0].macro_dictionary
-
-
-def _generate_semantic_diagnostics(
-    ls: MEDFORDLanguageServer,
-    params: DidSaveTextDocumentParams,
-) -> None:
-    """Wrapper around validation function to request and display Diagnostics
-    Parameters: the Language Server, DidSaveTextDocument parameters
-       Returns: none
-       Effects: Displays diagnostics
-    """
-    doc = ls.workspace.get_document(params.text_document.uri)
-
-    (_, diagnostics) = validate_data(doc, ls.validation_mode)
-
+    # Publish those diagnostics
     ls.publish_diagnostics(doc.uri, diagnostics)
