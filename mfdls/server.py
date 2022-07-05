@@ -79,8 +79,16 @@ async def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams)
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=['@']))
 def completions(params: Optional[CompletionParams] = None) -> CompletionList:
     """Returns completion items."""
-    tokens = get_available_tokens()
-    return tokens.keys()
+    tokens = get_available_tokens().keys()
+    clist = []
+    for token in tokens:
+        clist.append(CompletionItem(Label=token))
+        
+    return CompletionList(
+        is_incomplete = False,
+        items = clist
+    )
+
 
 
 #### #### #### HELPERS #### #### ####
