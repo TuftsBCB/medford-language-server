@@ -29,10 +29,10 @@ from pygls.lsp.methods import (  # TEXT_DOCUMENT_DID_SAVE,
 
 from pygls.server import LanguageServer
 
-from medford_syntax import validate_syntax
-from medford_validation import ValidationMode, validate_data
-from pip_helpers import pip_install, pip_uninstall, pip_upgrade
-from medford_tokens import get_available_tokens
+from mfdls.medford_syntax import validate_syntax
+from mfdls.medford_validation import ValidationMode, validate_data
+from mfdls.pip_helpers import pip_install, pip_uninstall, pip_upgrade
+from mfdls.medford_tokens import get_available_tokens
 
 # Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
