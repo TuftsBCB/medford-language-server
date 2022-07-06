@@ -9,9 +9,8 @@ bindings are provided by the pygls library.
 
 """
 import logging
-from typing import Union, Optional, List
+from typing import Union, Optional
 
-from pygls.lsp.methods import TEXT_DOCUMENT_DID_CHANGE, TEXT_DOCUMENT_DID_OPEN, COMPLETION
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
@@ -22,9 +21,11 @@ from pygls.lsp.types import (
     DidSaveTextDocumentParams,
     MessageType,
 )
+
 from pygls.lsp.methods import (  # TEXT_DOCUMENT_DID_SAVE,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    COMPLETION,
 )
 
 from pygls.server import LanguageServer
@@ -36,7 +37,6 @@ from mfdls.medford_tokens import get_available_tokens
 
 # Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
-
 
 class MEDFORDLanguageServer(LanguageServer):
     """An object we can pass around that contains the connection to the text
