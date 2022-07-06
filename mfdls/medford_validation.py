@@ -22,7 +22,7 @@ from MEDFORD.medford_models import BCODMO, Entity
 from pygls.lsp.types import Diagnostic
 from pygls.workspace import Document
 
-from medford_syntax import validate_syntax
+from mfdls.medford_syntax import validate_syntax
 
 
 def validate_data(
