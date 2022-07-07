@@ -24,6 +24,7 @@ from pygls.lsp.types import (
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
+from mfdls.medford_tokens import get_available_tokens
 from mfdls.medford_validation import ValidationMode, validate_data
 from mfdls.pip_helpers import pip_install, pip_uninstall, pip_upgrade
 
@@ -49,6 +50,7 @@ class MEDFORDLanguageServer(LanguageServer):
     def __init__(self):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
+        self.tokens = get_available_tokens()
         super().__init__()
 
 
