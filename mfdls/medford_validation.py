@@ -71,10 +71,10 @@ def validate_data(
     # pylint: disable-next=W0212
     errors = parser.err_mngr.return_errors()
 
-    for err in errors:
-        _parse_medford_error(err)
+    for error in errors:
+        _parse_medford_error(error)
 
     return ([], [])
 
-def _parse_medford_error(err: ValidationError):
-    logging.critical(repr(err))
+def _parse_medford_error(error: ValidationError):
+    logging.critical(repr(error))
