@@ -19,7 +19,7 @@ from MEDFORD.medford_detail import detail
 from MEDFORD.medford_detailparser import detailparser
 from MEDFORD.medford_error_mngr import error_mngr
 from MEDFORD.medford_models import BCODMO, Entity
-from pygls.lsp.types import Diagnostic
+from pygls.lsp.types.basic_structures import Diagnostic
 from pygls.workspace import Document
 
 from mfdls.medford_syntax import validate_syntax
@@ -69,6 +69,12 @@ def validate_data(
     # Also, there is no other way to get this collection right now so disable
     # the check until the API is changed.
     # pylint: disable-next=W0212
-    logging.critical(parser.err_mngr._error_collection)
+    errors = parser.err_mngr.return_errors()
+
+    for err in errors:
+        _parse_medford_error(err)
 
     return ([], [])
+
+def _parse_medford_error(err: ValidationError):
+    logging.critical(repr(err))
