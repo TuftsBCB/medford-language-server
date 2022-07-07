@@ -58,8 +58,25 @@ class MEDFORDLanguageServer(LanguageServer):
         self.macros = {}
         super().__init__()
 
+# Here we can generate all of the tokens once on compilation to increase performance
+def _generate_completion_list() -> CompletionList:
+    tokens = get_available_tokens()
+
+    clist = []
+    for token in tokens:
+        clist.append(CompletionItem(label=token))
+        for value in tokens[token]:
+            clist.append(CompletionItem(label= token + "-" + value))
+        
+    
+    return CompletionList(
+        is_incomplete = False,
+        items = clist
+    )
+
 
 medford_server = MEDFORDLanguageServer()
+completion_list = _generate_completion_list()
 
 #### #### #### LSP METHODS #### #### ####
 
@@ -78,16 +95,8 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=['@']))
 def completions(params: Optional[CompletionParams] = None) -> CompletionList:
     """Returns completion items."""
-    tokens = get_available_tokens().keys()
-    clist = []
-    for token in tokens:
-        clist.append(CompletionItem(label=token))
-        
-    return CompletionList(
-        is_incomplete = False,
-        items = clist
-    )
-
+    # Since we gathered the tokens on launch, we can just refer our completions to those.
+    return completion_list
 
 # Does not work yet, commenting out for a merge
 # @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
