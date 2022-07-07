@@ -11,10 +11,10 @@ bindings are provided by the pygls library.
 import logging
 from typing import Union
 
-from pygls.lsp.methods import ( 
-    TEXT_DOCUMENT_DID_SAVE,
+from pygls.lsp.methods import (
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DID_SAVE,
 )
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
