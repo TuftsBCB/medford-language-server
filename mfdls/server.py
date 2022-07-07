@@ -11,9 +11,10 @@ bindings are provided by the pygls library.
 import logging
 from typing import Union
 
-from pygls.lsp.methods import (  # TEXT_DOCUMENT_DID_SAVE,
+from pygls.lsp.methods import (
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DID_SAVE,
 )
 from pygls.lsp.types import (
     DidChangeTextDocumentParams,
@@ -24,11 +25,12 @@ from pygls.lsp.types import (
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
+from mfdls.medford_tokens import get_available_tokens
 from mfdls.medford_validation import ValidationMode, validate_data
 from mfdls.pip_helpers import pip_install, pip_uninstall, pip_upgrade
 
 # Set up logging to pygls.log
-logging.basicConfig(filename="pygls.log", filemode="w", level=logging.INFO)
+logging.basicConfig(filename="pygls.log", filemode="w", level=logging.WARNING)
 
 
 class MEDFORDLanguageServer(LanguageServer):
@@ -49,6 +51,7 @@ class MEDFORDLanguageServer(LanguageServer):
     def __init__(self):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
+        self.tokens = get_available_tokens()
         super().__init__()
 
 
@@ -67,14 +70,14 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
 
 
 # Does not work yet, commenting out for a merge
-# @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
-# def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
-#     """Text document did save notification."""
-#     _generate_semantic_diagnostics(ls, params)
+@medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
+def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
+    """Text document did save notification."""
+    _generate_semantic_diagnostics(ls, params)
 
 
 #### #### #### CUSTOM COMMANDS #### #### ####
@@ -112,7 +115,7 @@ async def uninstall_mfdls(ls: MEDFORDLanguageServer, *_args):
 
 def _generate_syntactic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: Union[DidOpenTextDocumentParams, DidChangeTextDocumentParams],
+    params: DidChangeTextDocumentParams,
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, textDocument parameters
@@ -127,17 +130,16 @@ def _generate_syntactic_diagnostics(
     (details, diagnostics) = validate_syntax(doc)
 
     # Publish the diagnostics
-    if diagnostics:
-        ls.publish_diagnostics(doc.uri, diagnostics)
+    ls.publish_diagnostics(doc.uri, diagnostics)
 
-    # Store the defined macros in the languge server
+    # Store the defined macros in the languge server, if we successfully parse the file
     if details:
         ls.macros = details[0].macro_dictionary
 
 
 def _generate_semantic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: DidSaveTextDocumentParams,
+    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, DidSaveTextDocument parameters
