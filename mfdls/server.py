@@ -61,9 +61,11 @@ class MEDFORDLanguageServer(LanguageServer):
 # Here we can generate all of the tokens once on compilation to increase performance
 def _generate_completion_list() -> CompletionList:
     tokens = get_available_tokens()
+    tokens["MEDFORD"] = tokens.pop("Medford")
 
     clist = []
     for token in tokens:
+
         clist.append(CompletionItem(label=token))
         for value in tokens[token]:
             clist.append(CompletionItem(label= token + "-" + value))
