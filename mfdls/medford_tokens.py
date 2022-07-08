@@ -66,6 +66,9 @@ def _get_minor_tokens(major: Dict, definitions: Dict) -> Dict[str, List[str]]:
 
     minors = _extract_minors_from_def(definitions[def_name])
 
+    if major_name == "Medford":
+        major_name = "MEDFORD"
+
     if set(minors) == _DATA_PROV_NAMES:
         return _data_prov_minors(major, definitions)
     else:
