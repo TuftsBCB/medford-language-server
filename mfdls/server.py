@@ -116,7 +116,11 @@ async def uninstall_mfdls(ls: MEDFORDLanguageServer, *_args):
 
 def _generate_syntactic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams, DidChangeTextDocumentParams],
+    params: Union[
+        DidSaveTextDocumentParams,
+        DidOpenTextDocumentParams,
+        DidChangeTextDocumentParams,
+    ],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, textDocument parameters
@@ -140,7 +144,11 @@ def _generate_syntactic_diagnostics(
 
 def _generate_semantic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams, DidChangeTextDocumentParams],
+    params: Union[
+        DidSaveTextDocumentParams,
+        DidOpenTextDocumentParams,
+        DidChangeTextDocumentParams,
+    ],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, DidSaveTextDocument parameters

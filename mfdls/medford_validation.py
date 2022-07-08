@@ -16,7 +16,7 @@ from MEDFORD.medford import ValidationError
 from MEDFORD.medford_BagIt import BagIt
 from MEDFORD.medford_detail import detail
 from MEDFORD.medford_detailparser import detailparser
-from MEDFORD.medford_error_mngr import error_mngr
+from MEDFORD.medford_error_mngr import error_mngr, mfd_err
 from MEDFORD.medford_models import BCODMO, Entity
 from pygls.lsp.types.basic_structures import (
     Diagnostic,
