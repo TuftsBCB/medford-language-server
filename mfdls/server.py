@@ -65,12 +65,10 @@ def _generate_completion_list() -> CompletionList:
 
     clist = []
     for token in tokens:
-
         clist.append(CompletionItem(label=token))
         for value in tokens[token]:
             clist.append(CompletionItem(label= token + "-" + value))
         
-    
     return CompletionList(
         is_incomplete = False,
         items = clist
