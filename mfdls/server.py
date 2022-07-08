@@ -25,6 +25,7 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
+    MessageType,
 )
 from pygls.server import LanguageServer
 
@@ -74,13 +75,17 @@ completion_list = _generate_completion_list()
 @medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    try:
+        _generate_syntactic_diagnostics(ls, params)
+    except Exception as e:
+        ls.show_message(e, MessageType.Error)
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     _generate_syntactic_diagnostics(ls, params)
+    ls.show_message("hello worlds", MessageType.Error)
 
 
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@"]))
@@ -90,7 +95,6 @@ def completions(_params: Optional[CompletionParams] = None) -> CompletionList:
     return completion_list
 
 
-# Does not work yet, commenting out for a merge
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
@@ -123,8 +127,7 @@ def _generate_syntactic_diagnostics(
     (details, diagnostics) = validate_syntax(doc)
 
     # Publish the diagnostics
-    if diagnostics:
-        ls.publish_diagnostics(doc.uri, diagnostics)
+    ls.publish_diagnostics(doc.uri, diagnostics)
 
     # Store the defined macros in the languge server
     if details:
