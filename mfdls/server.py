@@ -85,7 +85,6 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
     _generate_syntactic_diagnostics(ls, params)
-    ls.show_message("hello worlds", MessageType.Error)
 
 
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@"]))
@@ -102,6 +101,7 @@ def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
 
 
 #### #### #### CUSTOM COMMANDS #### #### ####
+
 
 #### #### #### HELPERS #### #### ####
 
@@ -137,9 +137,9 @@ def _generate_syntactic_diagnostics(
 def _generate_semantic_diagnostics(
     ls: MEDFORDLanguageServer,
     params: Union[
-        DidChangeTextDocumentParams,
         DidSaveTextDocumentParams,
         DidOpenTextDocumentParams,
+        DidChangeTextDocumentParams,
     ],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
