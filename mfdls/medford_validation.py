@@ -8,7 +8,6 @@ MEDFORD parser. Currently does not generate Diagnostic objects, only prints
 to the server's output.
 TODO: Parse medford errors into Diagnostics.
 """
-import logging
 import sys
 from typing import List, Tuple
 
@@ -17,9 +16,14 @@ from MEDFORD.medford import ValidationError
 from MEDFORD.medford_BagIt import BagIt
 from MEDFORD.medford_detail import detail
 from MEDFORD.medford_detailparser import detailparser
-from MEDFORD.medford_error_mngr import error_mngr
+from MEDFORD.medford_error_mngr import error_mngr, mfd_err
 from MEDFORD.medford_models import BCODMO, Entity
-from pygls.lsp.types.basic_structures import Diagnostic
+from pygls.lsp.types.basic_structures import (
+    Diagnostic,
+    DiagnosticSeverity,
+    Position,
+    Range,
+)
 from pygls.workspace import Document
 
 from mfdls.medford_syntax import validate_syntax
@@ -45,7 +49,7 @@ def validate_data(
     final_dict = parser.export()
 
     # Pydantic is going to spew out an error here, it's the parser's job
-    # to parser it
+    # to parse it
     try:
         if mode == ValidationMode.BCODMO:
             _ = BCODMO(**final_dict)
@@ -66,15 +70,33 @@ def validate_data(
     else:
         return (details, [])
 
-    # Also, there is no other way to get this collection right now so disable
-    # the check until the API is changed.
-    # pylint: disable-next=W0212
     errors = parser.err_mngr.return_errors()
 
-    for error in errors:
-        _parse_medford_error(error)
+    diagnostics = []
 
-    return ([], [])
+    for error_list in errors.values():
+        for error in error_list:
+            diagnostics.append(_parse_medford_error(error))
 
-def _parse_medford_error(error: ValidationError):
-    logging.critical(repr(error))
+    return ([], diagnostics)
+
+
+def _parse_medford_error(err: mfd_err) -> Diagnostic:
+
+    line_number = err.line - 1
+    error_message = err.msg
+    error_type = err.errtype
+
+    # pylint: disable-next=R0801
+    diag = Diagnostic(
+        range=Range(
+            start=Position(line=line_number, character=0),
+            end=Position(line=line_number + 1, character=0),
+        ),
+        severity=DiagnosticSeverity.Error,
+        code=error_type,
+        source="MEDFORD",
+        message=error_message,
+    )
+
+    return diag
