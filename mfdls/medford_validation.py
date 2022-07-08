@@ -76,5 +76,6 @@ def validate_data(
 
     return ([], [])
 
+
 def _parse_medford_error(error: ValidationError):
     logging.critical(repr(error))
