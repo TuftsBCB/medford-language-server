@@ -95,7 +95,7 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     _generate_syntactic_diagnostics(ls, params)
 
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=['@']))
-def completions(params: Optional[CompletionParams] = None) -> CompletionList:
+def completions(_params: Optional[CompletionParams] = None) -> CompletionList:
     """Returns completion items."""
     # Since we gathered the tokens on launch, we can just refer our completions to those.
     return completion_list
