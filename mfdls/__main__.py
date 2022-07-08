@@ -13,7 +13,11 @@ pythom -m mfdls [--ws | --tcp [--port <port number>] [--host <host ip>]]
 """
 import argparse
 import logging
+import sys
+import os
 
+# Gotta get the medford parser in the path before we can import the server
+sys.path.append(os.path.join(os.getcwd(), "..", "medford-parser", "src"))
 from mfdls.server import medford_server
 
 logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
@@ -38,6 +42,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
+
 
     if args.tcp:
         medford_server.start_tcp(args.host, args.port)

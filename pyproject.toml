@@ -66,8 +66,8 @@ py-version = 3.8
 jobs = 0
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = ["R1705", "E0401"]
+disable = ["R1705", "R0801"]
 # R1705: sometimes having each branch enumerated is more clear
-# E0401: this is temporary while we wait for the new parser updates to hit PyPI
+# R0801: sometimes you need to repeat yourself
 [tool.pylint.'REPORTS']
 output-format = "colorized"

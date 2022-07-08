@@ -70,14 +70,15 @@ def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
-    _generate_semantic_diagnostics(ls, params)
+    ls.show_message("hello world")
+    _generate_syntactic_diagnostics(ls, params)
 
 
 # Does not work yet, commenting out for a merge
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
-    _generate_semantic_diagnostics(ls, params)
+    _generate_syntactic_diagnostics(ls, params)
 
 
 #### #### #### CUSTOM COMMANDS #### #### ####
@@ -115,7 +116,7 @@ async def uninstall_mfdls(ls: MEDFORDLanguageServer, *_args):
 
 def _generate_syntactic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: DidChangeTextDocumentParams,
+    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams, DidChangeTextDocumentParams],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, textDocument parameters
@@ -139,7 +140,7 @@ def _generate_syntactic_diagnostics(
 
 def _generate_semantic_diagnostics(
     ls: MEDFORDLanguageServer,
-    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams],
+    params: Union[DidSaveTextDocumentParams, DidOpenTextDocumentParams, DidChangeTextDocumentParams],
 ) -> None:
     """Wrapper around validation function to request and display Diagnostics
     Parameters: the Language Server, DidSaveTextDocument parameters
