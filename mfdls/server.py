@@ -66,11 +66,10 @@ def _generate_completion_list() -> CompletionList:
     tokens["MEDFORD"] = tokens.pop("Medford")
 
     clist = []
-    for token in tokens:
+    for token, minors in tokens.items():
         clist.append(CompletionItem(label=token))
-        for value in tokens[token]:
+        for value in minors:
             clist.append(CompletionItem(label= token + "-" + value))
-        
     return CompletionList(
         is_incomplete = False,
         items = clist
@@ -179,3 +178,4 @@ def _generate_semantic_diagnostics(
     (_, diagnostics) = validate_data(doc, ls.validation_mode)
 
     ls.publish_diagnostics(doc.uri, diagnostics)
+    
