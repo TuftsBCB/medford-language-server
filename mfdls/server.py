@@ -25,7 +25,6 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
-    MessageType,
 )
 from pygls.server import LanguageServer
 
@@ -75,10 +74,7 @@ completion_list = _generate_completion_list()
 @medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
-    try:
-        _generate_syntactic_diagnostics(ls, params)
-    except Exception as e:
-        ls.show_message(e, MessageType.Error)
+    _generate_syntactic_diagnostics(ls, params)
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
