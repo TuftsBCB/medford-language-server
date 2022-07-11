@@ -1,7 +1,7 @@
 """server.py
 
 By: Liam Strand
-On: June 2022
+On: Summer 2022
 
 A server implementing the Language Server Protocol for the MEDFORD metadata
 markup language. Validation is provided by Polina Shpilker's parser. LSP
@@ -9,7 +9,7 @@ bindings are provided by the pygls library.
 
 """
 import logging
-from typing import Optional, Union
+from typing import Union
 
 from pygls.lsp.methods import (
     COMPLETION,
@@ -18,17 +18,22 @@ from pygls.lsp.methods import (
     TEXT_DOCUMENT_DID_SAVE,
 )
 from pygls.lsp.types import (
-    CompletionItem,
     CompletionList,
     CompletionOptions,
     CompletionParams,
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
-    MessageType,
+
 )
 from pygls.server import LanguageServer
 
+from mfdls.completions import (
+    generate_macro_list,
+    generate_major_token_list,
+    generate_minor_token_list,
+    is_requesting_minor_token,
+)
 from mfdls.medford_syntax import validate_syntax
 from mfdls.medford_tokens import get_available_tokens
 from mfdls.medford_validation import ValidationMode, validate_data
@@ -51,23 +56,11 @@ class MEDFORDLanguageServer(LanguageServer):
     def __init__(self):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
+        self.tokens = get_available_tokens()
         super().__init__()
 
 
-# Here we can generate all of the tokens once on compilation to increase performance
-def _generate_completion_list() -> CompletionList:
-    tokens = get_available_tokens()
-
-    clist = []
-    for token, minors in tokens.items():
-        clist.append(CompletionItem(label=token))
-        for value in minors:
-            clist.append(CompletionItem(label=token + "-" + value))
-    return CompletionList(is_incomplete=False, items=clist)
-
-
 medford_server = MEDFORDLanguageServer()
-completion_list = _generate_completion_list()
 
 #### #### #### LSP METHODS #### #### ####
 
@@ -84,11 +77,26 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     _generate_semantic_diagnostics(ls, params)
 
 
-@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@"]))
-def completions(_params: Optional[CompletionParams] = None) -> CompletionList:
+@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
+def completions(ls: MEDFORDLanguageServer, params: CompletionParams) -> CompletionList:
     """Returns completion items."""
     # Since we gathered the tokens on launch, we can just refer our completions to those.
-    return completion_list
+    doc = ls.workspace.get_document(params.text_document.uri)
+    line = doc.lines[params.position.line]
+
+    if line[params.position.character - 1] == "@":
+        if params.position.character == 1:
+            return generate_major_token_list(ls.tokens)
+        elif (
+            line[params.position.character - 2] == "`" and params.position.character > 2
+        ):
+            return generate_macro_list(ls.macros)
+    elif line[params.position.character - 1] == "-" and is_requesting_minor_token(
+        line, params.position.character
+    ):
+        return generate_minor_token_list(ls.tokens, line, params.position.character)
+
+    return CompletionList(is_incomplete=False, items=[])
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
@@ -123,8 +131,8 @@ def _generate_syntactic_diagnostics(
     # Get diagnostics on the document
     try:
         (details, diagnostics) = validate_syntax(doc)
-    except(ValueError):
-        ls.show_message("There was an error parsing the file. Review your recent changes.", MessageType.Warning)
+    except ValueError as err:
+        logging.warning(err)
         return
 
     # Publish the diagnostics
@@ -151,9 +159,13 @@ def _generate_semantic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     try:
-        (_, diagnostics) = validate_data(doc, ls.validation_mode)
-    except(ValueError):
-        ls.show_message("There was an error parsing the file. Review your recent changes.", MessageType.Warning)
+        (details, diagnostics) = validate_data(doc, ls.validation_mode)
+    except ValueError as err:
+        logging.warning(err)
         return
+
+    # Store the defined macros in the languge server
+    if details:
+        ls.macros = details[0].macro_dictionary
 
     ls.publish_diagnostics(doc.uri, diagnostics)
