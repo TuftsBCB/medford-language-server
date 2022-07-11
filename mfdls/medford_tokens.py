@@ -117,11 +117,16 @@ def _data_prov_minors(major: Dict, definitions: Dict) -> Dict[str, List[str]]:
 
     token_dict = {}
 
+    all_minors = set()
+
     for path in paths:
         def_name = path.split(_SCHEMA_DEFS_PATH)[-1]
         major_name = _form_data_prov_major_name(big_major, def_name)
         minors = _extract_minors_from_def(definitions[def_name])
         token_dict[major_name] = minors
+        all_minors.update(set(minors))
+
+    token_dict[big_major] = list(all_minors)
 
     return token_dict
 
