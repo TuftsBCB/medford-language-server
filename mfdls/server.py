@@ -25,6 +25,7 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
+    MessageType,
 )
 from pygls.server import LanguageServer
 
@@ -74,13 +75,13 @@ completion_list = _generate_completion_list()
 @medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
 
 
 @medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@"]))
@@ -93,7 +94,7 @@ def completions(_params: Optional[CompletionParams] = None) -> CompletionList:
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
 
 
 #### #### #### CUSTOM COMMANDS #### #### ####
@@ -120,7 +121,11 @@ def _generate_syntactic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     # Get diagnostics on the document
-    (details, diagnostics) = validate_syntax(doc)
+    try:
+        (details, diagnostics) = validate_syntax(doc)
+    except(ValueError):
+        ls.show_message("There was an error parsing the file. Review your recent changes.", MessageType.Warning)
+        return
 
     # Publish the diagnostics
     ls.publish_diagnostics(doc.uri, diagnostics)
@@ -145,6 +150,10 @@ def _generate_semantic_diagnostics(
     """
     doc = ls.workspace.get_document(params.text_document.uri)
 
-    (_, diagnostics) = validate_data(doc, ls.validation_mode)
+    try:
+        (_, diagnostics) = validate_data(doc, ls.validation_mode)
+    except(ValueError):
+        ls.show_message("There was an error parsing the file. Review your recent changes.", MessageType.Warning)
+        return
 
     ls.publish_diagnostics(doc.uri, diagnostics)
