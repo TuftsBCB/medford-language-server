@@ -1,6 +1,6 @@
 """server.py
 
-By: Liam Strand
+By: Liam Strand and Andrew Powers
 On: Summer 2022
 
 A server implementing the Language Server Protocol for the MEDFORD metadata
@@ -9,7 +9,7 @@ bindings are provided by the pygls library.
 
 """
 import logging
-from typing import Union
+from typing import Optional, Union
 
 from pygls.lsp.methods import (
     COMPLETION,
@@ -24,11 +24,11 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
-
 )
 from pygls.server import LanguageServer
 
 from mfdls.completions import (
+    NO_COMPLETIONS,
     generate_macro_list,
     generate_major_token_list,
     generate_minor_token_list,
@@ -77,32 +77,16 @@ def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     _generate_semantic_diagnostics(ls, params)
 
 
-@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
-def completions(ls: MEDFORDLanguageServer, params: CompletionParams) -> CompletionList:
-    """Returns completion items."""
-    # Since we gathered the tokens on launch, we can just refer our completions to those.
-    doc = ls.workspace.get_document(params.text_document.uri)
-    line = doc.lines[params.position.line]
-
-    if line[params.position.character - 1] == "@":
-        if params.position.character == 1:
-            return generate_major_token_list(ls.tokens)
-        elif (
-            line[params.position.character - 2] == "`" and params.position.character > 2
-        ):
-            return generate_macro_list(ls.macros)
-    elif line[params.position.character - 1] == "-" and is_requesting_minor_token(
-        line, params.position.character
-    ):
-        return generate_minor_token_list(ls.tokens, line, params.position.character)
-
-    return CompletionList(is_incomplete=False, items=[])
-
-
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
     _generate_semantic_diagnostics(ls, params)
+
+
+@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
+def completions(ls: MEDFORDLanguageServer, params: CompletionParams) -> CompletionList:
+    """Request for completion items"""
+    return _generate_completions(ls, params)
 
 
 #### #### #### CUSTOM COMMANDS #### #### ####
@@ -169,3 +153,37 @@ def _generate_semantic_diagnostics(
         ls.macros = details[0].macro_dictionary
 
     ls.publish_diagnostics(doc.uri, diagnostics)
+
+
+def _generate_completions(
+    ls: MEDFORDLanguageServer, params: CompletionParams
+) -> CompletionList:
+    """Generate a completion list to show to the client, calling different functions
+    based on the RPC parameters.
+    Parameters: The language server and the commpletion parameters (importantly the
+                position of the completion trigger)
+       Returns: A list of possible completinos
+       Effects: None
+    """
+
+    doc = ls.workspace.get_document(params.text_document.uri)
+    line = doc.lines[params.position.line]
+
+    clist: Optional[CompletionList] = None
+
+    if line[params.position.character - 1] == "@":
+        if params.position.character == 1:
+            clist = generate_major_token_list(ls.tokens)
+        elif (
+            line[params.position.character - 2] == "`" and params.position.character > 2
+        ):
+            clist = generate_macro_list(ls.macros)
+    elif line[params.position.character - 1] == "-" and is_requesting_minor_token(
+        line, params.position.character
+    ):
+        clist = generate_minor_token_list(ls.tokens, line, params.position.character)
+
+    if clist:
+        return clist
+    else:
+        return NO_COMPLETIONS
