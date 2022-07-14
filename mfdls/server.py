@@ -161,7 +161,6 @@ def _generate_semantic_diagnostics(
 
     ls.publish_diagnostics(doc.uri, diagnostics)
 
-<<<<<<< HEAD
 def _generate_hover(
     ls: MEDFORDLanguageServer, params: HoverParams
 ) -> Hover:
@@ -171,7 +170,6 @@ def _generate_hover(
     line_no = doc.lines.index(line)
 
     return resolve_hover(line, line_no)
-=======
 
 def _generate_completions(
     ls: MEDFORDLanguageServer, params: CompletionParams
@@ -205,4 +203,3 @@ def _generate_completions(
         return clist
     else:
         return NO_COMPLETIONS
->>>>>>> origin/main
