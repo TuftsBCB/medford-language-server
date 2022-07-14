@@ -1,7 +1,7 @@
 """server.py
 
-By: Liam Strand
-On: June 2022
+By: Liam Strand and Andrew Powers
+On: Summer 2022
 
 A server implementing the Language Server Protocol for the MEDFORD metadata
 markup language. Validation is provided by Polina Shpilker's parser. LSP
@@ -19,7 +19,6 @@ from pygls.lsp.methods import (
     HOVER
 )
 from pygls.lsp.types import (
-    CompletionItem,
     CompletionList,
     CompletionOptions,
     CompletionParams,
@@ -31,6 +30,13 @@ from pygls.lsp.types import (
 )
 from pygls.server import LanguageServer
 
+from mfdls.completions import (
+    NO_COMPLETIONS,
+    generate_macro_list,
+    generate_major_token_list,
+    generate_minor_token_list,
+    is_requesting_minor_token,
+)
 from mfdls.medford_syntax import validate_syntax
 from mfdls.medford_tokens import get_available_tokens
 from mfdls.medford_validation import ValidationMode, validate_data
@@ -54,23 +60,11 @@ class MEDFORDLanguageServer(LanguageServer):
     def __init__(self):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
+        self.tokens = get_available_tokens()
         super().__init__()
 
 
-# Here we can generate all of the tokens once on compilation to increase performance
-def _generate_completion_list() -> CompletionList:
-    tokens = get_available_tokens()
-
-    clist = []
-    for token, minors in tokens.items():
-        clist.append(CompletionItem(label=token))
-        for value in minors:
-            clist.append(CompletionItem(label=token + "-" + value))
-    return CompletionList(is_incomplete=False, items=clist)
-
-
 medford_server = MEDFORDLanguageServer()
-completion_list = _generate_completion_list()
 
 #### #### #### LSP METHODS #### #### ####
 
@@ -78,26 +72,25 @@ completion_list = _generate_completion_list()
 @medford_server.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: MEDFORDLanguageServer, params: DidChangeTextDocumentParams):
     """Text document did change notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_OPEN)
 def did_open(ls: MEDFORDLanguageServer, params: DidOpenTextDocumentParams):
     """Text document did open notification."""
-    _generate_syntactic_diagnostics(ls, params)
-
-
-@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@"]))
-def completions(_params: Optional[CompletionParams] = None) -> CompletionList:
-    """Returns completion items."""
-    # Since we gathered the tokens on launch, we can just refer our completions to those.
-    return completion_list
+    _generate_semantic_diagnostics(ls, params)
 
 
 @medford_server.feature(TEXT_DOCUMENT_DID_SAVE)
 def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
-    _generate_syntactic_diagnostics(ls, params)
+    _generate_semantic_diagnostics(ls, params)
+
+
+@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
+def completions(ls: MEDFORDLanguageServer, params: CompletionParams) -> CompletionList:
+    """Request for completion items"""
+    return _generate_completions(ls, params)
 
 @medford_server.feature(HOVER)
 def hover(ls: MEDFORDLanguageServer, params: HoverParams) -> Hover:
@@ -127,7 +120,11 @@ def _generate_syntactic_diagnostics(
     doc = ls.workspace.get_document(params.text_document.uri)
 
     # Get diagnostics on the document
-    (details, diagnostics) = validate_syntax(doc)
+    try:
+        (details, diagnostics) = validate_syntax(doc)
+    except ValueError as err:
+        logging.warning(err)
+        return
 
     # Publish the diagnostics
     ls.publish_diagnostics(doc.uri, diagnostics)
@@ -152,10 +149,19 @@ def _generate_semantic_diagnostics(
     """
     doc = ls.workspace.get_document(params.text_document.uri)
 
-    (_, diagnostics) = validate_data(doc, ls.validation_mode)
+    try:
+        (details, diagnostics) = validate_data(doc, ls.validation_mode)
+    except ValueError as err:
+        logging.warning(err)
+        return
+
+    # Store the defined macros in the languge server
+    if details:
+        ls.macros = details[0].macro_dictionary
 
     ls.publish_diagnostics(doc.uri, diagnostics)
 
+<<<<<<< HEAD
 def _generate_hover(
     ls: MEDFORDLanguageServer, params: HoverParams
 ) -> Hover:
@@ -165,3 +171,38 @@ def _generate_hover(
     line_no = doc.lines.index(line)
 
     return resolve_hover(line, line_no)
+=======
+
+def _generate_completions(
+    ls: MEDFORDLanguageServer, params: CompletionParams
+) -> CompletionList:
+    """Generate a completion list to show to the client, calling different functions
+    based on the RPC parameters.
+    Parameters: The language server and the commpletion parameters (importantly the
+                position of the completion trigger)
+       Returns: A list of possible completinos
+       Effects: None
+    """
+
+    doc = ls.workspace.get_document(params.text_document.uri)
+    line = doc.lines[params.position.line]
+
+    clist: Optional[CompletionList] = None
+
+    if line[params.position.character - 1] == "@":
+        if params.position.character == 1:
+            clist = generate_major_token_list(ls.tokens)
+        elif (
+            line[params.position.character - 2] == "`" and params.position.character > 2
+        ):
+            clist = generate_macro_list(ls.macros)
+    elif line[params.position.character - 1] == "-" and is_requesting_minor_token(
+        line, params.position.character
+    ):
+        clist = generate_minor_token_list(ls.tokens, line, params.position.character)
+
+    if clist:
+        return clist
+    else:
+        return NO_COMPLETIONS
+>>>>>>> origin/main

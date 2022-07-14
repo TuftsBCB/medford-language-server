@@ -7,7 +7,7 @@ A language server, implementing the Language Server Protocol, for the MEDFORD me
 
 
 ## Editors:
-* [VS Code](https://github.com/liam-strand/medford-vscode)
+* [VS Code](https://marketplace.visualstudio.com/items?itemName=TuftsBCB.medford-vscode)
 
 ## Development
 This project is configured to use black, mypy, and pylint. Please run them and deal with any errors or warnings before commiting to master.
