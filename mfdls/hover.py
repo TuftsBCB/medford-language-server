@@ -68,7 +68,7 @@ def create_contents_minor(token: str, tokens_dict: Dict[str, List[str]]) -> str:
         Effects: None
     """
     major = token[0:token.find('-')]
-    minors = tokens_dict.get(major)
+    minors = tokens_dict.get(major, "Failed")
     content_string = f"Other minor tokens of @{major}: "
 
     if minors is None:
