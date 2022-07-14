@@ -78,7 +78,7 @@ def validate_data(
         for error in error_list:
             diagnostics.append(_parse_medford_error(error))
 
-    return ([], diagnostics)
+    return (details, diagnostics)
 
 
 def _parse_medford_error(err: mfd_err) -> Diagnostic:
