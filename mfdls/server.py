@@ -16,6 +16,7 @@ from pygls.lsp.methods import (
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DID_SAVE,
+    HOVER
 )
 from pygls.lsp.types import (
     CompletionItem,
@@ -25,12 +26,15 @@ from pygls.lsp.types import (
     DidChangeTextDocumentParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
+    Hover,
+    HoverParams
 )
 from pygls.server import LanguageServer
 
 from mfdls.medford_syntax import validate_syntax
 from mfdls.medford_tokens import get_available_tokens
 from mfdls.medford_validation import ValidationMode, validate_data
+from mfdls.hover import resolve_hover
 
 # Set up logging to pygls.log
 logging.basicConfig(filename="pygls.log", filemode="w", level=logging.WARNING)
@@ -95,6 +99,9 @@ def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     """Text document did save notification."""
     _generate_syntactic_diagnostics(ls, params)
 
+@medford_server.feature(HOVER)
+def hover(ls: MEDFORDLanguageServer, params: HoverParams) -> Hover:
+    return _generate_hover(ls, params)
 
 #### #### #### CUSTOM COMMANDS #### #### ####
 
@@ -148,3 +155,13 @@ def _generate_semantic_diagnostics(
     (_, diagnostics) = validate_data(doc, ls.validation_mode)
 
     ls.publish_diagnostics(doc.uri, diagnostics)
+
+def _generate_hover(
+    ls: MEDFORDLanguageServer, params: HoverParams
+) -> Hover:
+
+    doc = ls.workspace.get_document(params.text_document.uri)
+    line = doc.lines[params.position.line]
+    line_no = doc.lines.index(line)
+
+    return resolve_hover(line, line_no)
