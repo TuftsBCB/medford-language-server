@@ -26,7 +26,7 @@ def generate_major_token_list(token_dict: Dict[str, List[str]]) -> CompletionLis
     return CompletionList(is_incomplete=False, items=clist)
 
 
-def generate_macro_list(macros: Dict[str, Tuple[int, str]]) -> CompletionList:
+def generate_macro_list(macros: Dict[str, Tuple[int, str]], pos: int) -> CompletionList:
     """Generate a completion list of defined macros, along with their definitions
     Parameters: The working macro dictionary
        Returns: The macro dictionary in CompletionList form
@@ -35,7 +35,8 @@ def generate_macro_list(macros: Dict[str, Tuple[int, str]]) -> CompletionList:
 
     clist = []
     for macro, replacement in macros.items():
-        clist.append(CompletionItem(label=macro, detail=replacement[1]))
+        if replacement[0] <= pos:
+            clist.append(CompletionItem(label=macro, detail=replacement[1]))
 
     return CompletionList(is_incomplete=False, items=clist)
 
