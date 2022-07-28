@@ -6,7 +6,8 @@ On: June 2022
 
 The driver for the MEDFORD Language Server.
 
-The medford parser github repository must be located parallel to the 
+
+The medford parser github repository must be located parallel to the
 medford-language-server repository.
 
 Usage:
