@@ -193,7 +193,7 @@ def _generate_completions(
         elif (
             line[params.position.character - 2] == "`" and params.position.character > 2
         ):
-            clist = generate_macro_list(ls.macros)
+            clist = generate_macro_list(ls.macros, params.position.line)
     elif line[params.position.character - 1] == "-" and is_requesting_minor_token(
         line, params.position.character
     ):

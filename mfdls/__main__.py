@@ -6,6 +6,10 @@ On: June 2022
 
 The driver for the MEDFORD Language Server.
 
+
+The medford parser github repository must be located parallel to the
+medford-language-server repository.
+
 Usage:
 
 pythom -m mfdls [--ws | --tcp [--port <port number>] [--host <host ip>]]
@@ -18,7 +22,12 @@ import sys
 
 # Gotta get the medford parser in the path before we can import the server
 # pylint: disable-next=C0413
-sys.path.append(os.path.join(os.getcwd(), "..", "medford-parser", "src"))
+
+try:
+    import MEDFORD as _
+except ModuleNotFoundError:
+    sys.path.append(os.path.join(os.getcwd(), "..", "medford-parser", "src"))
+
 from mfdls.server import medford_server
 
 logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
