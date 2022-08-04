@@ -1,9 +1,20 @@
-from typing import List, Dict
-from pygls.lsp.types.language_features import Hover, Position, Range
+"""hover.py
+
+By: Andrew Powers
+On: Summer 2022
+
+# TODO add docstring up here.
+
+"""
+from typing import Dict, List
+
+from pygls.lsp.types.basic_structures import Position, Range
+from pygls.lsp.types.language_features import Hover
 
 from mfdls.medford_tokens import get_available_tokens
 
-NO_HOVER: Hover = Hover(contents = [])
+NO_HOVER: Hover = Hover(contents=[])
+
 
 def resolve_hover(line: str, line_no: int) -> Hover:
     """
@@ -14,35 +25,36 @@ def resolve_hover(line: str, line_no: int) -> Hover:
     """
 
     token_dict = get_available_tokens()
-    if line.find(' ') == -1:
+    if line.find(" ") == -1:
         return NO_HOVER
-    if line[0] == '@':
-        whitespace = line.find(' ')
+    if line[0] == "@":
+        whitespace = line.find(" ")
         token = line[1:whitespace]
-        if token.find('-') == -1:
+        if token.find("-") == -1:
             if token_dict.get(token, "Failed") == "Failed":
                 return NO_HOVER
             else:
                 return Hover(
                     contents=create_contents_major(token, token_dict),
-                    range = Range(
+                    range=Range(
                         start=Position(line=line_no, character=0),
-                        end=Position(line=line_no, character=whitespace)
-                        )
+                        end=Position(line=line_no, character=whitespace),
+                    ),
                 )
         else:
-            if token_dict.get(token[:token.find('-')], "Failed") == "Failed":
+            if token_dict.get(token[: token.find("-")], "Failed") == "Failed":
                 return NO_HOVER
             else:
                 return Hover(
                     contents=create_contents_minor(token, token_dict),
-                    range = Range(
+                    range=Range(
                         start=Position(line=line_no, character=0),
-                        end=Position(line=line_no, character=whitespace)
-                        )
+                        end=Position(line=line_no, character=whitespace),
+                    ),
                 )
     else:
         return NO_HOVER
+
 
 def create_contents_major(token: str, tokens_dict: Dict[str, List[str]]) -> List[str]:
     """
@@ -60,6 +72,7 @@ def create_contents_major(token: str, tokens_dict: Dict[str, List[str]]) -> List
             content_string[1] += f"{minor}, "
     return content_string
 
+
 def create_contents_minor(token: str, tokens_dict: Dict[str, List[str]]) -> str:
     """
     Generates a contents property for the requested Hover of a Minor Token.
@@ -67,7 +80,7 @@ def create_contents_minor(token: str, tokens_dict: Dict[str, List[str]]) -> str:
         Returns: A formatted contents property
         Effects: None
     """
-    major = token[0:token.find('-')]
+    major = token[0 : token.find("-")]
     minors = tokens_dict.get(major, "Failed")
     content_string = f"Other minor tokens of @{major}: "
 
