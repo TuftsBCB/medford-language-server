@@ -171,7 +171,7 @@ def _generate_hover(ls: MEDFORDLanguageServer, params: HoverParams) -> Hover:
     line = doc.lines[params.position.line]
     line_no = doc.lines.index(line)
 
-    return resolve_hover(line, line_no)
+    return resolve_hover(line, line_no, ls.tokens)
 
 
 def _generate_completions(

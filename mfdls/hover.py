@@ -11,12 +11,10 @@ from typing import Dict, List
 from pygls.lsp.types.basic_structures import Position, Range
 from pygls.lsp.types.language_features import Hover
 
-from mfdls.medford_tokens import get_available_tokens
-
 NO_HOVER: Hover = Hover(contents=[])
 
 
-def resolve_hover(line: str, line_no: int) -> Hover:
+def resolve_hover(line: str, line_no: int, token_dict: Dict[str, List[str]]) -> Hover:
     """
     Handles a Hover request and produces necessary output.
         Parameters: The current line as a str and the current line number
@@ -24,7 +22,6 @@ def resolve_hover(line: str, line_no: int) -> Hover:
         Effects: None
     """
 
-    token_dict = get_available_tokens()
     if line.find(" ") == -1:
         return NO_HOVER
     if line[0] == "@":
