@@ -3,7 +3,9 @@
 By: Andrew Powers
 On: Summer 2022
 
-# TODO add docstring up here.
+A set of functions that helps to do various things relating to the hover capabilites of the LSP.
+Resolves the position of the user currently, and generates relevant hover information based on
+findings.
 
 """
 from typing import Dict, List
