@@ -1,6 +1,6 @@
 [project]
 name = "mfdls"
-version = "0.0.2"
+version = "0.1.1"
 description = "A language server, implementing the Language Server Protocol, for the MEDFORD metadata markup language."
 authors = [
     { name="Liam Strand", email="Liam.Strand@tufts.edu" },
