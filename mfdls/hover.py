@@ -10,8 +10,7 @@ findings.
 """
 from typing import Dict, List
 
-from pygls.lsp.types.basic_structures import Position, Range
-from pygls.lsp.types.language_features import Hover
+from lsprotocol.types import Position, Range, Hover
 
 NO_HOVER: Hover = Hover(contents=[])
 

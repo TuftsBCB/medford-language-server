@@ -11,14 +11,14 @@ bindings are provided by the pygls library.
 import logging
 from typing import Optional, Union
 
-from pygls.lsp.methods import (
-    COMPLETION,
-    HOVER,
+from lsprotocol.types import (
+    TEXT_DOCUMENT_COMPLETION,
+    TEXT_DOCUMENT_HOVER,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DID_SAVE,
 )
-from pygls.lsp.types import (
+from lsprotocol.types import (
     CompletionList,
     CompletionOptions,
     CompletionParams,
@@ -61,7 +61,7 @@ class MEDFORDLanguageServer(LanguageServer):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
         self.tokens = get_available_tokens()
-        super().__init__()
+        super().__init__("mfdls", "0.1.1")
 
 
 medford_server = MEDFORDLanguageServer()
@@ -87,13 +87,13 @@ def did_save(ls: MEDFORDLanguageServer, params: DidSaveTextDocumentParams):
     _generate_semantic_diagnostics(ls, params)
 
 
-@medford_server.feature(COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
+@medford_server.feature(TEXT_DOCUMENT_COMPLETION, CompletionOptions(trigger_characters=["@", "-"]))
 def completions(ls: MEDFORDLanguageServer, params: CompletionParams) -> CompletionList:
     """Request for completion items"""
     return _generate_completions(ls, params)
 
 
-@medford_server.feature(HOVER)
+@medford_server.feature(TEXT_DOCUMENT_HOVER)
 def hover(ls: MEDFORDLanguageServer, params: HoverParams) -> Hover:
     """Request for hover"""
     return _generate_hover(ls, params)

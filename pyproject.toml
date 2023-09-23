@@ -28,8 +28,8 @@ repository = "https://github.com/liam-strand/medford-language-server/"
 
 # Requirements
 [dependencies]
-pygls = "^0.11"
-medford = "^1.0"
+pygls = "1.0"
+medford = "1.0"
 
 [dev-dependencies]
 black = "^22.1"

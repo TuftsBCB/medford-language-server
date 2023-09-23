@@ -20,7 +20,7 @@ from MEDFORD.medford_error_mngr import (
     mfd_unexpected_macro,
     mfd_wrong_macro_token,
 )
-from pygls.lsp.types.basic_structures import (
+from lsprotocol.types import (
     Diagnostic,
     DiagnosticRelatedInformation,
     DiagnosticSeverity,

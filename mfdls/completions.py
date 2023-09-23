@@ -11,7 +11,7 @@ as completion lists.
 from string import whitespace
 from typing import Dict, List, Optional, Tuple
 
-from pygls.lsp.types.language_features import CompletionItem, CompletionList
+from lsprotocol.types import CompletionItem, CompletionList
 
 NO_COMPLETIONS = CompletionList(is_incomplete=False, items=[])
 
