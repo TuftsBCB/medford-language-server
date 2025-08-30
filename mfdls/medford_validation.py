@@ -11,13 +11,16 @@ TODO: Parse medford errors into Diagnostics.
 import sys
 from typing import List, Tuple
 
-from MEDFORD.medford import MFDMode as ValidationMode
-from MEDFORD.medford import ValidationError
-from MEDFORD.medford_BagIt import BagIt
-from MEDFORD.medford_detail import detail
-from MEDFORD.medford_detailparser import detailparser
-from MEDFORD.medford_error_mngr import error_mngr, mfd_err
-from MEDFORD.medford_models import BCODMO, Entity
+#from medford import OutputMode as ValidationMode
+#update to mesh with new medford
+from pydantic import ValidationError
+#update to mesh with new medford
+
+from mfdls.medford_BagIt import BagIt
+from mfdls.medford_detail import detail
+from mfdls.medford_detailparser import detailparser
+from mfdls.medford_error_mngr import error_mngr, mfd_err
+from mfdls.medford_models import BCODMO, Entity
 from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
@@ -27,7 +30,26 @@ from lsprotocol.types import (
 from pygls.workspace import Document
 
 from mfdls.medford_syntax import validate_syntax
+from enum import Enum
 
+class ValidationMode(Enum):
+    """Enum storing possible outout types of the MEDFORD parser."""
+    OTHER = 'OTHER'
+    BCODMO = 'BCODMO'
+    RDF = 'RDF'
+    BAGIT = 'BAGIT'
+    # TODO : Make creating a bag a separate option?
+    # Could want to make an output RDF file AND zip it.
+
+    def __str__(self) :
+        return self.value
+
+    @classmethod
+    def _missing_(cls, value: str):
+        for member in cls :
+            if member.name.lower() == value.lower() :
+                return member
+        return None
 
 def validate_data(
     text_doc: Document, mode: ValidationMode

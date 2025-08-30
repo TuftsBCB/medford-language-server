@@ -23,10 +23,10 @@ import sys
 # Gotta get the medford parser in the path before we can import the server
 # pylint: disable-next=C0413
 
-try:
-    import MEDFORD as _
-except ModuleNotFoundError:
-    sys.path.append(os.path.join(os.getcwd(), "..", "medford-parser", "src"))
+#try:
+#    import MEDFORD as _
+#except ModuleNotFoundError:
+#    sys.path.append(os.path.join(os.getcwd(), "..", "medford-parser", "src"))
 
 from mfdls.server import medford_server
 

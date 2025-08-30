@@ -10,8 +10,8 @@ supports reporting on syntax errors.
 import re
 from typing import List, Optional, Tuple
 
-from MEDFORD.medford_detail import detail, detail_return
-from MEDFORD.medford_error_mngr import (
+from mfdls.medford_detail import detail, detail_return
+from mfdls.medford_error_mngr import (
     error_mngr,
     mfd_duplicated_macro,
     mfd_no_desc,

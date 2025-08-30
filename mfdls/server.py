@@ -61,7 +61,7 @@ class MEDFORDLanguageServer(LanguageServer):
         self.validation_mode = ValidationMode.OTHER
         self.macros = {}
         self.tokens = get_available_tokens()
-        super().__init__("mfdls", "0.1.1")
+        super().__init__("mfdls", "0.1.2")
 
 
 medford_server = MEDFORDLanguageServer()

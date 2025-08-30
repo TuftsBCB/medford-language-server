@@ -83,7 +83,7 @@ def create_contents_minor(token: str, tokens_dict: Dict[str, List[str]]) -> str:
     content_string = f"Other minor tokens of @{major}: "
 
     if minors is None:
-        return "Hover Resolve Issue"
+        return "Hover Resolve Issue " + token 
     for minor in minors:
         if minors.index(minor) == len(minors) - 1:
             content_string += minor
