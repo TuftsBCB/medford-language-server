@@ -28,11 +28,11 @@ from lsprotocol.types import (
     Position,
     Range,
 )
-from pygls.workspace import Document
-
+#from pygls.workspace import Document
+from pygls.workspace import TextDocument
 
 def validate_syntax(
-    text_doc: Document,
+    text_doc: TextDocument,
 ) -> Tuple[List[detail], List[Diagnostic]]:
     """Evaluates the syntax of a medford file and generates a token list and
     diagnostic list

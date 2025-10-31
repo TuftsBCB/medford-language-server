@@ -27,7 +27,8 @@ from lsprotocol.types import (
     Position,
     Range,
 )
-from pygls.workspace import Document
+#from pygls.workspace import Document
+from pygls.workspace import TextDocument
 
 from mfdls.medford_syntax import validate_syntax
 from enum import Enum
@@ -52,7 +53,7 @@ class ValidationMode(Enum):
         return None
 
 def validate_data(
-    text_doc: Document, mode: ValidationMode
+    text_doc: TextDocument, mode: ValidationMode
 ) -> Tuple[List[detail], List[Diagnostic]]:
     """Performs a semantic (and syntactic) validation on a text document
     Parameters: A text document to verify, and the mode to validate in

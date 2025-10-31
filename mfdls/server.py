@@ -17,6 +17,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DID_SAVE,
+    PublishDiagnosticsParams
 )
 from lsprotocol.types import (
     CompletionList,
@@ -28,8 +29,8 @@ from lsprotocol.types import (
     Hover,
     HoverParams,
 )
-from pygls.server import LanguageServer
-
+#from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 from mfdls.completions import (
     NO_COMPLETIONS,
     generate_macro_list,
@@ -120,7 +121,7 @@ def _generate_syntactic_diagnostics(
     """
 
     # Get the current document from the text editor
-    doc = ls.workspace.get_document(params.text_document.uri)
+    doc = ls.workspace.get_text_document(params.text_document.uri)
 
     # Get diagnostics on the document
     try:
@@ -130,8 +131,17 @@ def _generate_syntactic_diagnostics(
         return
 
     # Publish the diagnostics
-    ls.publish_diagnostics(doc.uri, diagnostics)
-
+    #ls.publish_diagnostics(doc.uri, diagnostics)
+    #ls.text_document_publish_diagnostics(doc.uri, diagnostics)
+    ls.text_document_publish_diagnostics(
+        PublishDiagnosticsParams(
+                uri=doc.uri,
+                version=1,
+                diagnostics=diagnostics,
+            )
+    )
+    #print(diagnostics)
+    #print("hello")
     # Store the defined macros in the languge server
     if details:
         ls.macros = details[0].macro_dictionary
@@ -150,24 +160,31 @@ def _generate_semantic_diagnostics(
        Returns: none
        Effects: Displays diagnostics
     """
-    doc = ls.workspace.get_document(params.text_document.uri)
-
+    doc = ls.workspace.get_text_document(params.text_document.uri)
+    
     try:
         (details, diagnostics) = validate_data(doc, ls.validation_mode)
     except ValueError as err:
         logging.warning(err)
         return
-
+    #print(diagnostics)
     # Store the defined macros in the languge server
     if details:
         ls.macros = details[0].macro_dictionary
-
-    ls.publish_diagnostics(doc.uri, diagnostics)
-
+    #print(doc.uri)
+    #print("hello")
+    #ls.publish_diagnostics(doc.uri, diagnostics)
+    ls.text_document_publish_diagnostics(
+        PublishDiagnosticsParams(
+                uri=doc.uri,
+                version=1,
+                diagnostics=diagnostics,
+            )
+    )
 
 def _generate_hover(ls: MEDFORDLanguageServer, params: HoverParams) -> Hover:
 
-    doc = ls.workspace.get_document(params.text_document.uri)
+    doc = ls.workspace.get_text_document(params.text_document.uri)
     line = doc.lines[params.position.line]
     line_no = doc.lines.index(line)
 
@@ -185,7 +202,7 @@ def _generate_completions(
        Effects: None
     """
 
-    doc = ls.workspace.get_document(params.text_document.uri)
+    doc = ls.workspace.get_text_document(params.text_document.uri)
     line = doc.lines[params.position.line]
 
     clist: Optional[CompletionList] = None
